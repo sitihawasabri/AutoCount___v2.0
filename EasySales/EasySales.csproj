@@ -1,0 +1,575 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Costura.Fody.3.3.3\build\Costura.Fody.props" Condition="Exists('..\packages\Costura.Fody.3.3.3\build\Costura.Fody.props')" />
+  <Import Project="..\packages\SQLite.3.13.0\build\net45\SQLite.props" Condition="Exists('..\packages\SQLite.3.13.0\build\net45\SQLite.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E68BECF9-8EDF-436B-8453-6FB80DCBE602}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>EasySales</RootNamespace>
+    <AssemblyName>EasySales</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>false</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>C:\Users\easyt\Desktop\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>easysales.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>EasySales.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AutoCount">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Accounting">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Accounting.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Accounting.UI">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Accounting.UI.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.ARAP">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.ARAP.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.BusinessFlow">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.BusinessFlow.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.GeneralMaint">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.GeneralMaint.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.GL">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.GL.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.GL.FinancialReport">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.GL.FinancialReport.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.GST">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.GST.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.ImportExport">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.ImportExport.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Inquiry">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Inquiry.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Invoicing">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Invoicing.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Invoicing.Purchase">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Invoicing.Purchase.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Invoicing.Sales">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Invoicing.Sales.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.MainEntry">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.MainEntry.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.MainEntry.XmlSerializers">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.MainEntry.XmlSerializers.dll</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.ManageAccountBook">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.ManageAccountBook.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.ManagementStudio">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.ManagementStudio.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Manufacturing">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Manufacturing.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.StartScreen">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.StartScreen.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Stock">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Stock.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.StockMaint">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.StockMaint.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Tools">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Tools.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Tools.DataUpgrade">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Tools.DataUpgrade.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.Tools.XmlSerializers">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Tools.XmlSerializers.dll</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.UI">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.UI.DLL</HintPath>
+    </Reference>
+    <Reference Include="AutoCount.UI.XmlSerializers">
+      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.UI.XmlSerializers.dll</HintPath>
+    </Reference>
+    <Reference Include="AutoUpdater.NET, Version=1.6.0.0, Culture=neutral, PublicKeyToken=501435c91b35f4bc, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autoupdater.NET.Official.1.6.0\lib\net40\AutoUpdater.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.3.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
+      <HintPath>..\packages\BouncyCastle.1.8.3.1\lib\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="Ciloci.Flee, Version=0.9.26.0, Culture=neutral, PublicKeyToken=c8526a021ef298ed, processorArchitecture=MSIL">
+      <HintPath>..\packages\BCE.Autocount.2.0.0.1\lib\net45\Ciloci.Flee.dll</HintPath>
+    </Reference>
+    <Reference Include="Costura, Version=3.3.3.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
+      <HintPath>..\packages\Costura.Fody.3.3.3\lib\net40\Costura.dll</HintPath>
+    </Reference>
+    <Reference Include="Dapper, Version=1.50.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.1.50.0\lib\net451\Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Protobuf, Version=3.6.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Protobuf.3.6.1\lib\net45\Google.Protobuf.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\BCE.Autocount.2.0.0.1\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.SHDocVw, Version=1.1.0.0, Culture=neutral">
+      <HintPath>..\packages\BCE.Autocount.2.0.0.1\lib\net45\Interop.SHDocVw.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="K4os.Compression.LZ4, Version=1.2.6.0, Culture=neutral, PublicKeyToken=2186fa9121ef231d, processorArchitecture=MSIL">
+      <HintPath>..\packages\K4os.Compression.LZ4.1.2.6\lib\net45\K4os.Compression.LZ4.dll</HintPath>
+    </Reference>
+    <Reference Include="K4os.Compression.LZ4.Streams, Version=1.2.6.0, Culture=neutral, PublicKeyToken=2186fa9121ef231d, processorArchitecture=MSIL">
+      <HintPath>..\packages\K4os.Compression.LZ4.Streams.1.2.6\lib\net45\K4os.Compression.LZ4.Streams.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="K4os.Hash.xxHash, Version=1.0.6.0, Culture=neutral, PublicKeyToken=32cd54395057cec3, processorArchitecture=MSIL">
+      <HintPath>..\packages\K4os.Hash.xxHash.1.0.6\lib\net45\K4os.Hash.xxHash.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Client, Version=2.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\BCE.Autocount.2.0.0.1\lib\net45\Microsoft.AspNet.SignalR.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore, Version=2.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.EntityFrameworkCore.2.1.2\lib\netstandard2.0\Microsoft.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Abstractions, Version=2.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.EntityFrameworkCore.Abstractions.2.1.2\lib\netstandard2.0\Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Relational, Version=2.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.EntityFrameworkCore.Relational.2.1.2\lib\netstandard2.0\Microsoft.EntityFrameworkCore.Relational.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Abstractions, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Caching.Abstractions.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Memory, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Caching.Memory.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Caching.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Configuration.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Configuration.Abstractions.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Binder, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Configuration.Binder.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Configuration.Binder.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.2.1.1\lib\net461\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.2.1.1\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Options.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Primitives.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data, Version=8.0.19.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.8.0.19\lib\net452\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data.Entity.EF6, Version=6.10.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.Entity.6.10.9\lib\net452\MySql.Data.Entity.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data.EntityFrameworkCore, Version=8.0.19.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.EntityFrameworkCore.8.0.19\lib\net452\MySql.Data.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\BCE.Autocount.2.0.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationFramework" />
+    <Reference Include="Quartz, Version=3.0.7.0, Culture=neutral, PublicKeyToken=f6b8c98a402cc8a4, processorArchitecture=MSIL">
+      <HintPath>..\packages\Quartz.3.0.7\lib\net452\Quartz.dll</HintPath>
+    </Reference>
+    <Reference Include="Remotion.Linq, Version=2.2.0.0, Culture=neutral, PublicKeyToken=fee00910d6e5f53b, processorArchitecture=MSIL">
+      <HintPath>..\packages\Remotion.Linq.2.2.0\lib\net45\Remotion.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
+    </Reference>
+    <Reference Include="RestSharp, Version=106.0.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.106.10.1\lib\net452\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="SocketIOClient.NetFx, Version=1.0.0.5, Culture=neutral, PublicKeyToken=ce453294e4652142, processorArchitecture=MSIL">
+      <HintPath>..\packages\SocketIOClient.NetFx.1.0.0.5\lib\net45\SocketIOClient.NetFx.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\netstandard1.1\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.5.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel" />
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ComponentModel.Annotations.4.5.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Common, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.Common.4.3.0\lib\net451\System.Data.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SqlClient, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SqlClient.4.7.0\lib\net451\System.Data.SqlClient.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite, Version=1.0.112.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.Core.1.0.112.0\lib\net451\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Device" />
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Diagnostics.DiagnosticSource.4.5.0\lib\net46\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.Interactive.Async, Version=3.0.3000.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Interactive.Async.3.1.1\lib\net46\System.Interactive.Async.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\netstandard1.1\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\netstandard1.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Ubiety.Dns.Core, Version=2.2.1.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.8.0.19\lib\net452\Ubiety.Dns.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Web.DemoData.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="websocket-sharp, Version=1.0.4.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DashboardActivity.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DashboardActivity.Designer.cs">
+      <DependentUpon>DashboardActivity.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Database\AutoCountServer.cs" />
+    <Compile Include="Database\ATChandler.cs" />
+    <Compile Include="Database\AutoCountV2.cs" />
+    <Compile Include="Database\SocketClient.cs" />
+    <Compile Include="Database\SQLHandler_ATC.cs" />
+    <Compile Include="Database\AutoCount.cs" />
+    <Compile Include="Database\Database.cs" />
+    <Compile Include="Database\FTPServer.cs" />
+    <Compile Include="Database\LocalDB.cs" />
+    <Compile Include="Database\SQLServer.cs" />
+    <Compile Include="Job\APS\JobAPSReceiptKOSync.cs" />
+    <Compile Include="Job\APS\JobAPSCreditNoteKOSync.cs" />
+    <Compile Include="Job\APS\JobAPSImageSync.cs" />
+    <Compile Include="Job\APS\JobAPSCreditNoteDetailSync.cs" />
+    <Compile Include="Job\APS\JobAPSCreditNoteSync.cs" />
+    <Compile Include="Job\APS\JobAPSDebitNoteSync.cs" />
+    <Compile Include="Job\APS\JobAPSDODetailSync.cs" />
+    <Compile Include="Job\APS\JobAPSDOSync.cs" />
+    <Compile Include="Job\APS\JobAPSInvoiceDetailSync.cs" />
+    <Compile Include="Job\APS\JobAPSInvoiceSync.cs" />
+    <Compile Include="Job\APS\JobAPSReceiptSync.cs" />
+    <Compile Include="Job\APS\JobAPSRefSync.cs" />
+    <Compile Include="Job\APS\JobAPSSalespersonCustomerSync.cs" />
+    <Compile Include="Job\APS\JobAPSCustomerSync.cs" />
+    <Compile Include="Job\APS\JobAPSSalespersonSync.cs" />
+    <Compile Include="Job\APS\JobAPSTransferCN.cs" />
+    <Compile Include="Job\APS\JobAPSTransferPOBasket.cs" />
+    <Compile Include="Job\APS\JobAPSTransferQuotation.cs" />
+    <Compile Include="Job\APS\JobAPSTransferSO - Trial.cs" />
+    <Compile Include="Job\APS\JobAPSTransferSO.cs" />
+    <Compile Include="Job\APS\JobAPSWarehouseQtySync.cs" />
+    <Compile Include="Job\APS\JobAPSStockCategorySync.cs" />
+    <Compile Include="Job\APS\JobAPSStockSpecialPriceSync.cs" />
+    <Compile Include="Job\APS\JobAPSStockSync.cs" />
+    <Compile Include="Job\APS\JobAPSStockUomPriceSync.cs" />
+    <Compile Include="Job\APS\JobAPSWarehouseSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCCNKOSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCINVKOSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCDebitNoteSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCOutstandingSO.cs" />
+    <Compile Include="Job\AutoCount\JobATCTransferINVSDK.cs" />
+    <Compile Include="Job\AutoCount\JobATCTransferINV.cs" />
+    <Compile Include="Job\AutoCount\JobATCTransferSOSDKv2.cs" />
+    <Compile Include="Job\AutoCount\JobATCWHReadyStock.cs" />
+    <Compile Include="Job\AutoCount\JobATCReadyStock.cs" />
+    <Compile Include="Job\AutoCount\JobATCStockCardSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCTransferStockSDK.cs" />
+    <Compile Include="Job\AutoCount\JobATCTransferCSSDK.cs" />
+    <Compile Include="Job\AutoCount\JobATCTransferSOSDK.cs" />
+    <Compile Include="Job\AutoCount\JobATCTransferSO.cs" />
+    <Compile Include="Job\AutoCount\JobATCInvoiceSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCReceiptSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCInvoiceDetailSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCCreditNoteDetailSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCCreditNoteSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCSalespersonCustomerSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCStockSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCItemTemplateDtlSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCWarehouseQtySync.cs" />
+    <Compile Include="Job\AutoCount\JobATCItemTemplateSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCWarehouseSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCBranchSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCSalespersonSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCStockUomPriceSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCStockSpecialPriceSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCCustomerSync.cs" />
+    <Compile Include="Job\AutoCount\JobATCStockCategory.cs" />
+    <Compile Include="Job\QNE_opt\JobAgentSync.cs" />
+    <Compile Include="Job\QNE_opt\JobCreditNoteSync.cs" />
+    <Compile Include="Job\QNE_opt\JobCustomerAgentSync.cs" />
+    <Compile Include="Job\QNE_opt\JobCustomerSync.cs" />
+    <Compile Include="Job\QNE_opt\JobDebitNoteSync.cs" />
+    <Compile Include="Job\QNE_opt\JobInvoiceDetailsQneSync.cs" />
+    <Compile Include="Job\QNE_opt\JobInvoiceQneSync.cs" />
+    <Compile Include="Job\QNE_opt\JobPostSalesCNs.cs" />
+    <Compile Include="Job\QNE_opt\JobPostSalesInvoice.cs" />
+    <Compile Include="Job\QNE_opt\JobPostSalesOrders.cs" />
+    <Compile Include="Job\QNE_opt\JobReceiptSync.cs" />
+    <Compile Include="Job\QNE_opt\TranferImgGM.cs" />
+    <Compile Include="Job\QNE_opt\JobStockCategoriesSync.cs" />
+    <Compile Include="Job\QNE_opt\JobStockUomPriceSync.cs" />
+    <Compile Include="Job\QNE_opt\JobStockSync.cs" />
+    <Compile Include="Job\QNE_opt\NotJobPostInvoice.cs" />
+    <Compile Include="Job\SQLAccounting\JobCNTransfer.cs" />
+    <Compile Include="Job\SQLAccounting\JobStockCardSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobStockTransfer.cs" />
+    <Compile Include="Job\SQLAccounting\JobDOSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobUJ.cs" />
+    <Compile Include="Job\SQLAccounting\JobCFSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobDNDtlSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobCNSalesSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobDNSalesSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobInvoiceSalesSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobINVTransfer.cs" />
+    <Compile Include="Job\SQLAccounting\JobSOSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobCSTransfer.cs" />
+    <Compile Include="Job\SQLAccounting\JobWhStockSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobPaymentTransfer.cs" />
+    <Compile Include="Job\SQLAccounting\JobCostPriceSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobCNDtlSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobItemTemplateDtlSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobItemTemplateSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobBranchSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobCNSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobCustSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobDNSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobInvoiceDetailsSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobInvoiceSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobKnockOffSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobOutstandingSOSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobProductCategorySync.cs" />
+    <Compile Include="Job\SQLAccounting\JobProductPriceSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobProductSpecialPriceSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobProductSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobRcptSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobReadImageSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobSalesPersonSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobSoTransfer.cs" />
+    <Compile Include="Job\SQLAccounting\JobProductGroupsSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobUpdateCashSalesSync.cs" />
+    <Compile Include="Job\SQLAccounting\JobUpdateCSDTLSync.cs" />
+    <Compile Include="Job\SQLAccounting\ObjCompare.cs" />
+    <Compile Include="MainActivity.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainActivity.Designer.cs">
+      <DependentUpon>MainActivity.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\CheckBackendRule.cs" />
+    <Compile Include="Model\GlobalEvent.cs" />
+    <Compile Include="Model\InternetConnection.cs" />
+    <Compile Include="Model\JobPrivilege.cs" />
+    <Compile Include="Model\JobQueue.cs" />
+    <Compile Include="Model\JobQueueLogger.cs" />
+    <Compile Include="Model\LogicParser.cs" />
+    <Compile Include="Model\QNEApi.cs" />
+    <Compile Include="Model\QNEApiClient.cs" />
+    <Compile Include="Model\SQLAccApi.cs" />
+    <Compile Include="Model\_.cs" />
+    <Compile Include="Object\ATC_Configuration.cs" />
+    <Compile Include="Object\ATC_Connection.cs" />
+    <Compile Include="Object\DpprSQLiteSequenceLog.cs" />
+    <Compile Include="Object\Log.cs" />
+    <Compile Include="Object\Helper.cs" />
+    <Compile Include="Object\ATCRule.cs" />
+    <Compile Include="Object\APSRule.cs" />
+    <Compile Include="Object\Constants.cs" />
+    <Compile Include="Object\DpprAccountingSoftware.cs" />
+    <Compile Include="Object\DpprException.cs" />
+    <Compile Include="Object\DpprFTPServerConfig.cs" />
+    <Compile Include="Object\DpprJobQueueLog.cs" />
+    <Compile Include="Object\DpprMySQLconfig.cs" />
+    <Compile Include="Object\DpprQne.cs" />
+    <Compile Include="Object\DpprSQLServerconfig.cs" />
+    <Compile Include="Object\DpprSyncLog.cs" />
+    <Compile Include="Object\DpprTransferLog.cs" />
+    <Compile Include="Object\DpprUserSettings.cs" />
+    <Compile Include="Object\GlobalLogger.cs" />
+    <Compile Include="Object\QNE\SalesCNsDetailPostParams.cs" />
+    <Compile Include="Object\QNE\SalesCNsPostParams.cs" />
+    <Compile Include="Object\QNE\SalesCNsResp.cs" />
+    <Compile Include="Object\QNE\SalesInvoiceDetailPostParams.cs" />
+    <Compile Include="Object\QNE\SalesInvoiceDetailResp.cs" />
+    <Compile Include="Object\QNE\SalesInvoiceDetailTransferFrom.cs" />
+    <Compile Include="Object\QNE\SalesInvoicePostParams.cs" />
+    <Compile Include="Object\QNE\SalesInvoiceResp.cs" />
+    <Compile Include="Object\QNE\SalesOrdersDetailPostParams.cs" />
+    <Compile Include="Object\QNE\SalesOrdersDetailResp.cs" />
+    <Compile Include="Object\QNE\SalesOrdersDetailTransferFrom.cs" />
+    <Compile Include="Object\QNE\SalesOrdersPostParams.cs" />
+    <Compile Include="Object\QNE\SalesOrdersResp.cs" />
+    <Compile Include="Object\RespMessage.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="DashboardActivity.resx">
+      <DependentUpon>DashboardActivity.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainActivity.resx">
+      <DependentUpon>MainActivity.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <Content Include="512x512bb.ico" />
+    <Content Include="easysales.ico" />
+    <Content Include="local.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\SQLite.3.13.0\build\net45\SQLite.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SQLite.3.13.0\build\net45\SQLite.props'))" />
+    <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.112.0\build\net451\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.112.0\build\net451\System.Data.SQLite.Core.targets'))" />
+    <Error Condition="!Exists('..\packages\Fody.4.0.2\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.4.0.2\build\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Costura.Fody.3.3.3\build\Costura.Fody.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.3.3.3\build\Costura.Fody.props'))" />
+  </Target>
+  <Import Project="..\packages\System.Data.SQLite.Core.1.0.112.0\build\net451\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.112.0\build\net451\System.Data.SQLite.Core.targets')" />
+  <Import Project="..\packages\Fody.4.0.2\build\Fody.targets" Condition="Exists('..\packages\Fody.4.0.2\build\Fody.targets')" />
+</Project>
