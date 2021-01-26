@@ -165,6 +165,11 @@ namespace EasySales.Job
                         }
 
                         string deactivateOldRecords = "SELECT id, stock_dtl_key, doc_type, doc_key FROM cms_stock_card WHERE cancelled = 'F' ";
+                        if (cms_updated_time.Count > 0)
+                        {
+                            string updated_at = cms_updated_time["updated_at"].ToString().MSSQLdate();
+                            deactivateOldRecords += " AND last_modified >= '" + updated_at + "'";
+                        }
                         ArrayList inDBactiveTrans = mysql.Select(deactivateOldRecords);
                         logger.Broadcast("Active stock card transactions in DB: " + inDBactiveTrans.Count);
                         Dictionary<string, string> uniqueKeyList = new Dictionary<string, string>();
@@ -291,6 +296,34 @@ namespace EasySales.Job
                                         addedToRow = true;
                                     }
 
+                                    if (find_mssql_field == "DocType")
+                                    {
+                                        string DocType = string.Empty;
+
+                                        map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
+                                        {
+                                            if (mssql_fields.Key == "DocType")
+                                            {
+                                                DocType = mssql_fields.Value;
+                                                //IV - invoice
+                                                //CN - creditnote
+                                                //CS - cash sales
+                                                //PI - purchase invoice
+                                                //ST - stock transfer ---- change to XF (follow sql)
+                                                if (DocType == "ST")
+                                                {
+                                                    DocType = "XF";
+                                                }
+                                            }
+                                        });
+
+                                        docType = DocType;
+                                        row += inIdx == 0 ? "('" + DocType + "" : "','" + DocType;
+
+                                        NoMssqlField = false;
+                                        addedToRow = true;
+                                    }
+
                                     map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
                                     {
                                         if (find_mssql_field.EcodeContains(mssql_fields.Key))
@@ -309,7 +342,6 @@ namespace EasySales.Job
                                                     {
                                                         Database.Sanitize(ref tmp);
                                                         stockDtlKey = stockDtlKey == string.Empty && corr_mysql_field == "stock_dtl_key" ? tmp : stockDtlKey = stockDtlKey;
-                                                        docType = docType == string.Empty && corr_mysql_field == "doc_type" ? tmp : docType = docType;
                                                         docKey = docKey == string.Empty && corr_mysql_field == "doc_key" ? tmp : docKey = docKey;
                                                         row += inIdx == 0 ? "('" + tmp + "" : "','" + tmp;
                                                         addedToRow = true;
@@ -420,14 +452,6 @@ namespace EasySales.Job
                             string updateTimeQuery = cms_updated_time.Count > 0 ? "UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_stock_card'" : "INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_stock_card', NOW())";
                             mysql.Insert(updateTimeQuery);
                             mysql.Message("updateTimeQuery: " + updateTimeQuery);
-                            //if (cms_updated_time.Count > 0)
-                            //{
-                            //    mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_stock_card'");
-                            //}
-                            //else
-                            //{
-                            //    mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_stock_card', NOW())");
-                            //}
 
                             RecordCount = 0; /* reset count for the next database */
                             mysqlFieldList.Clear();

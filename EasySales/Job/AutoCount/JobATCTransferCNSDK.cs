@@ -22,7 +22,7 @@ using AutoCount.Invoicing.Sales.Invoice;
 namespace EasySales.Job
 {
     [DisallowConcurrentExecution]
-    public class JobATCTransferINVSDK : IJob
+    public class JobATCTransferCNSDK : IJob
     {
         private ATC_Connection connection = null;
         private string socket_OrderId = string.Empty;
@@ -66,7 +66,7 @@ namespace EasySales.Job
                     logger.Broadcast("isATCv2: " + isATCv2);
 
                     DpprSyncLog slog = new DpprSyncLog();
-                    slog.action_identifier = Constants.Action_ATC_Transfer_INV;
+                    slog.action_identifier = Constants.Action_ATC_Transfer_CN;
                     slog.action_failure = 0;
                     slog.action_failure_message = string.Empty;
                     slog.action_time = DateTime.Now.ToString();
@@ -75,7 +75,7 @@ namespace EasySales.Job
 
                     LocalDB.InsertSyncLog(slog);
 
-                    logger.message = "ATC Transfer INV (SDK) is running";
+                    logger.message = "ATC Transfer CN (SDK) is running";
                     logger.Broadcast();
 
                     List<DpprMySQLconfig> mysql_list = LocalDB.GetRemoteDatabaseConfig().Distinct().ToList();
@@ -92,7 +92,7 @@ namespace EasySales.Job
                         string order_id_format = "<<New>>";
 
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
-                        dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("transfer_inv_atc");
+                        dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("transfer_cn_atc");
 
                         ArrayList mssql_rule = new ArrayList();
                         if (jsonRule.Count > 0)
@@ -111,7 +111,7 @@ namespace EasySales.Job
                                 }
                             }
 
-                            string SOQuery = "SELECT o.*,DATE_FORMAT(o.order_date,'%d/%m/%Y %H:%s:%i') AS order_date_format,l.staff_code,cms_customer_branch.branch_name FROM cms_order AS o LEFT JOIN cms_customer AS c ON o.cust_id = c.cust_id LEFT JOIN cms_login AS l ON o.salesperson_id = l.login_id LEFT JOIN cms_customer_branch ON cms_customer_branch.branch_code = o.branch_code WHERE o.order_status = " + order_status + " AND cancel_status = 0 AND doc_type = 'invoice' AND order_fault = 0 ";
+                            string SOQuery = "SELECT o.*,DATE_FORMAT(o.order_date,'%d/%m/%Y %H:%s:%i') AS order_date_format,l.staff_code,cms_customer_branch.branch_name FROM cms_order AS o LEFT JOIN cms_customer AS c ON o.cust_id = c.cust_id LEFT JOIN cms_login AS l ON o.salesperson_id = l.login_id LEFT JOIN cms_customer_branch ON cms_customer_branch.branch_code = o.branch_code WHERE o.order_status = " + order_status + " AND cancel_status = 0 AND doc_type = 'credit' AND order_fault = 0 ";
 
                             socket_OrderId = socket_OrderId.Replace("\"", "\'");
                             string socketQuery = "AND order_id IN (" + socket_OrderId + ")";
@@ -121,15 +121,9 @@ namespace EasySales.Job
                             ArrayList queryResult = mysql.Select(SOQuery);
                             mysql.Message(SOQuery);
 
-                            logger.Broadcast("Total INV to be transferred: " + queryResult.Count);
+                            logger.Broadcast("Total CN to be transferred: " + queryResult.Count);
 
                             ATChandler autoCount = new ATChandler(isATCv2);
-                            logger.Broadcast("Approaching triggerConnection");
-                            if(isATCv2)
-                            {
-                                bool triggerConnection = AutoCountV2.TriggerConnection();
-                                logger.Broadcast("triggerConnection: " + triggerConnection);
-                            }
                             this.connection = autoCount.PerformAuth();
 
                             logger.Broadcast("Succesfully getting the user session");
@@ -138,7 +132,7 @@ namespace EasySales.Job
 
                             if (queryResult.Count == 0)
                             {
-                                logger.message = "No INV to be transferred";
+                                logger.message = "No CN to be transferred";
                                 logger.Broadcast();
                             }
                             else
@@ -148,40 +142,43 @@ namespace EasySales.Job
                                 if (autoCount.PerformAuthInAutoCount())
                                 {
                                     logger.Broadcast("Login with AutoCount is successful");
-                                    logger.Broadcast("Inserting Sales Invoices");
+                                    logger.Broadcast("Inserting Credit Note");
 
                                     for (int i = 0; i < queryResult.Count; i++)
                                     {
-                                        string inv_id = string.Empty;
+                                        string cnID = string.Empty;
 
                                         Dictionary<string, string> cms_data = (Dictionary<string, string>)queryResult[i];
 
                                         Thread.CurrentThread.CurrentCulture = new CultureInfo("en-GB");
-                                        inv_id = cms_data["order_id"];
+                                        cnID = cms_data["order_id"];
 
-                                        logger.Broadcast("inv id: " + inv_id);
-                                        logger.Broadcast("Creating invoices now...");
+                                        logger.Broadcast("cn ID: " + cnID);
+                                        logger.Broadcast("Creating CN now...");
                                         logger.Broadcast("Dynamic ATC");
 
-                                        dynamic doc = autoCount.NewInvoice();
+                                        AutoCount.Invoicing.Sales.CreditNote.CreditNoteCommand cmd = AutoCount.Invoicing.Sales.CreditNote.CreditNoteCommand.Create(this.connection.userSession, this.connection.userSession.DBSetting);
+                                        AutoCount.Invoicing.Sales.CreditNote.CreditNote doc = cmd.AddNew();
 
                                         doc.DebtorCode = cms_data["cust_code"];
                                         logger.Broadcast("Cust Code: " + cms_data["cust_code"]);
                                         logger.Broadcast("Passing cust_code");
                                         string order_id = order_id_format == "<<New>>" ? order_id_format : cms_data["order_id"];
-                                        doc.RefDocNo = order_id_format == "<<New>>" ? cms_data["order_id"] : "";
-                                        doc.DocNo = order_id;
-                                        doc.DocDate = Helper.ToDateTime(cms_data["order_date_format"]);
-                                        doc.Description = "Sales Invoices";
-                                        doc.CurrencyRate = 1;
-                                        doc.Agent = cms_data["staff_code"];
-                                        logger.Broadcast("Inserting Sales Location ---> " + cms_data["warehouse_code"]);
-                                        doc.SalesLocation = cms_data["warehouse_code"];
 
-                                        string invItemQuery = "SELECT oi.order_item_id, oi.disc_1, oi.disc_2, oi.disc_3 , oi.order_id, oi.ipad_item_id, oi.product_id, oi.salesperson_remark, oi.quantity, oi.editted_quantity, oi.unit_price, oi.unit_uom,oi.attribute_remark,oi.optional_remark, oi.discount_method, oi.discount_amount, oi.sub_total, oi.sequence_no, oi.uom_id, oi.packing_status, oi.packed_by, oi.cancel_status, oi.updated_at, cms_product.*, up.product_uom_rate, up.product_min_price FROM cms_order_item AS oi LEFT JOIN cms_product ON oi.product_code = cms_product.product_code LEFT JOIN cms_product_uom_price_v2 up ON up.product_code = oi.product_code AND up.product_uom = oi.unit_uom WHERE cancel_status = 0 AND  order_id = '" + inv_id + "'";
+                                        doc.DocNo = order_id;
+                                        doc.RefDocNo = order_id_format == "<<New>>" ? cms_data["order_id"] : "";
+                                        doc.DocDate = Helper.ToDateTime(cms_data["order_date_format"]);
+                                        doc.CurrencyRate = 1;
+                                        doc.Description = "CREDIT NOTE";
+                                        doc.CNType = "RETURN";
+                                        doc.Reason = cms_data["order_delivery_note"];
+                                        doc.SalesLocation = cms_data["warehouse_code"];
+                                        doc.Agent = cms_data["staff_code"];
+
+                                        string invItemQuery = "SELECT oi.order_item_id, oi.disc_1, oi.disc_2, oi.disc_3 , oi.order_id, oi.ipad_item_id, oi.product_id, oi.salesperson_remark, oi.quantity, oi.editted_quantity, oi.unit_price, oi.unit_uom,oi.attribute_remark,oi.optional_remark, oi.discount_method, oi.discount_amount, oi.sub_total, oi.sequence_no, oi.uom_id, oi.packing_status, oi.packed_by, oi.cancel_status, oi.updated_at, cms_product.*, up.product_uom_rate, up.product_min_price FROM cms_order_item AS oi LEFT JOIN cms_product ON oi.product_code = cms_product.product_code LEFT JOIN cms_product_uom_price_v2 up ON up.product_code = oi.product_code AND up.product_uom = oi.unit_uom WHERE cancel_status = 0 AND  order_id = '" + cnID + "'";
                                         ArrayList itemList = mysql.Select(invItemQuery);
 
-                                        logger.Broadcast("Invoice Item Query: " + invItemQuery);
+                                        logger.Broadcast("CN Item Query: " + invItemQuery);
                                         logger.Broadcast("ItemListCount: " + itemList.Count);
                                         if (itemList.Count > 0)
                                         {
@@ -207,8 +204,8 @@ namespace EasySales.Job
                                                 string discount = discountAmount + "%";
 
                                                 logger.Broadcast("Inserting the items");
-                                                dynamic dtl = autoCount.NewInvoiceDetails(doc);
-                                                dtl.AccNo = "500-00000";
+                                                dynamic dtl = autoCount.NewCreditNoteDetails(doc);
+                                                dtl.AccNo = "510-0000";
                                                 dtl.ItemCode = item["product_code"];
                                                 onlyItemToSync.Add(item["product_code"]);
 
@@ -237,7 +234,7 @@ namespace EasySales.Job
                                                 doc.Save();
                                                 logger.Broadcast("Save successfully");
                                                 string order_reference_id = doc.DocNo;
-                                                logger.Broadcast(inv_id + " created");
+                                                logger.Broadcast(cnID + " created");
                                                 int.TryParse(order_status, out int int_order_status);
                                                 int updateOrderStatus = int_order_status + 1;
                                                 string updateStatusQuery = "UPDATE cms_order SET order_status = '" + updateOrderStatus + "', order_reference = '" + order_reference_id + "' WHERE order_id = '" + cms_data["order_id"] + "'";
@@ -256,18 +253,18 @@ namespace EasySales.Job
                                                     }
                                                 }
 
-                                                mysql.Insert("INSERT INTO cms_order (order_id, order_reference) VALUES ('" + inv_id + "','" + order_reference_id + "') ON DUPLICATE KEY UPDATE order_reference = VALUES(order_reference);");
+                                                mysql.Insert("INSERT INTO cms_order (order_id, order_reference) VALUES ('" + cnID + "','" + order_reference_id + "') ON DUPLICATE KEY UPDATE order_reference = VALUES(order_reference);");
                                                 for (int ixx = 0; ixx < wh_stk_adj.Count; ixx++)
                                                 {
                                                     mysql.Insert(wh_stk_adj[ixx].ToString());
                                                 }
-                                                new JobATCStockCardSync().ExecuteSyncTodayOnly("1"); 
+                                                new JobATCStockCardSync().ExecuteSyncTodayOnly("1");
                                                 new JobATCWarehouseQtySync().ExecuteOnlyItem(onlyItemToSync);
                                             }
-                                            catch(AutoCount.AppException ex)
+                                            catch (AutoCount.AppException ex)
                                             {
-                                                logger.Broadcast("Transfer INV catch: " + ex.Message);
-                                                autoCount.Message("Transfer INV catch: " + ex.Message);
+                                                logger.Broadcast("Transfer CN catch: " + ex.Message);
+                                                autoCount.Message("Transfer CN catch: " + ex.Message); //Transfer CN catch: Foreign Key Error (Constraint Name=FK_GLDTL_AccNo) 
                                                 AutoCount.AppMessage.ShowMessage(ex.Message);
                                             }
                                         }
@@ -285,7 +282,7 @@ namespace EasySales.Job
                     mysql_list.Clear();
                     mssql_list.Clear();
 
-                    slog.action_identifier = Constants.Action_ATC_Transfer_INV;
+                    slog.action_identifier = Constants.Action_ATC_Transfer_CN;
                     slog.action_failure = 0;
                     slog.action_failure_message = string.Empty;
                     slog.action_time = DateTime.Now.ToString();
@@ -295,7 +292,7 @@ namespace EasySales.Job
 
                     LocalDB.InsertSyncLog(slog);
 
-                    logger.message = "Transfer INV (SDK) finished in (" + ts.TotalSeconds.ToString("F") + " seconds)";
+                    logger.message = "Transfer CN (SDK) finished in (" + ts.TotalSeconds.ToString("F") + " seconds)";
                     logger.Broadcast();
 
                 });

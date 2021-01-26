@@ -158,6 +158,7 @@ private void InitializeComponent()
             this.nt_stockcard_intv = new System.Windows.Forms.NumericUpDown();
             this.cb_stockcard = new System.Windows.Forms.CheckBox();
             this.cb_atc_v2 = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nt_inv_intv)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nt_invdtl_intv)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nt_outso_intv)).BeginInit();
@@ -1709,7 +1710,7 @@ private void InitializeComponent()
             this.lbl_company.BackColor = System.Drawing.Color.MediumBlue;
             this.lbl_company.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_company.ForeColor = System.Drawing.SystemColors.HighlightText;
-            this.lbl_company.Location = new System.Drawing.Point(969, 8);
+            this.lbl_company.Location = new System.Drawing.Point(970, 58);
             this.lbl_company.MinimumSize = new System.Drawing.Size(10, 9);
             this.lbl_company.Name = "lbl_company";
             this.lbl_company.Size = new System.Drawing.Size(52, 22);
@@ -2176,11 +2177,25 @@ private void InitializeComponent()
             this.cb_atc_v2.Visible = false;
             this.cb_atc_v2.CheckedChanged += new System.EventHandler(this.cb_atc_v2_CheckedChanged);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.ForeColor = System.Drawing.SystemColors.Desktop;
+            this.label1.Location = new System.Drawing.Point(970, 19);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.MaximumSize = new System.Drawing.Size(225, 231);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(148, 22);
+            this.label1.TabIndex = 164;
+            this.label1.Text = "AutoCount v2.0";
+            // 
             // DashboardActivity
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1204, 914);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.cb_atc_v2);
             this.Controls.Add(this.btn_run_stockcardsync);
             this.Controls.Add(this.nt_stockcard_intv);
@@ -2477,5 +2492,6 @@ private void InitializeComponent()
         private System.Windows.Forms.NumericUpDown nt_stockcard_intv;
         private System.Windows.Forms.CheckBox cb_stockcard;
         private System.Windows.Forms.CheckBox cb_atc_v2;
+        private System.Windows.Forms.Label label1;
     }
 }

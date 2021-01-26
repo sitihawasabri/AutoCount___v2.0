@@ -161,7 +161,7 @@ namespace EasySales.Job
 
                                         string order_id = order_id_format == "<<New>>" ? order_id_format : cms_data["order_id"];
                                         addCashDoc.DocNo = order_id;
-
+                                        addCashDoc.RefDocNo = order_id_format == "<<New>>" ? cms_data["order_id"] : "";
                                         addCashDoc.DocDate = Helper.ToDateTime(cms_data["order_date_format"]);
 
                                         addCashDoc.DebtorCode = cms_data["cust_code"];
@@ -225,6 +225,7 @@ namespace EasySales.Job
                                                 addCashDocDetail.ItemCode = item["product_code"];
                                                 addCashDocDetail.FurtherDescription = item["product_remark"];
                                                 addCashDocDetail.Description = item["product_name"];
+                                                addCashDocDetail.Desc2 = item["salesperson_remark"];
                                                 addCashDocDetail.Qty = quantity;
                                                 addCashDocDetail.Discount = discount;
                                                 addCashDocDetail.UOM = item["unit_uom"];
@@ -244,24 +245,24 @@ namespace EasySales.Job
                                             // Payment
                                             logger.Broadcast("Payment Section");
                                             addCashDoc.PaymentMode = 1;
-                                                addCashDoc.CCApprovalCode = DBNull.Value.ToString(); //DBNULL error
+                                            addCashDoc.CCApprovalCode = DBNull.Value.ToString(); //DBNULL error
                                             logger.Broadcast("Passing DBNULL");
-                                                addCashDoc.CashSalePayment.ARPayment.ClearDetails();
+                                            addCashDoc.CashSalePayment.ARPayment.ClearDetails();
 
-                                                if(isATCv2)
-                                                {
-                                                    addCashDoc.CashSalePayment = AutoCount.Invoicing.Sales.SalesPayment.Create(addCashDoc.ReferPaymentDocKey, addCashDoc.DocKey, "CS", this.connection.userSession, this.connection.userSession.DBSetting);
-                                                }
-                                                else
-                                                {
-                                                    addCashDoc.CashSalePayment = AutoCount.Invoicing.Sales.SalesPayment.Create(
-                                                                                addCashDoc.ReferPaymentDocKey, addCashDoc.DocKey,
-                                                                                AutoCount.Document.DocumentType.CashSale, this.connection.userSession, connection.dBSetting);
-                                                }
+                                            if (isATCv2)
+                                            {
+                                                addCashDoc.CashSalePayment = AutoCount.Invoicing.Sales.SalesPayment.Create(addCashDoc.ReferPaymentDocKey, addCashDoc.DocKey, "CS", this.connection.userSession, this.connection.userSession.DBSetting);
+                                            }
+                                            else
+                                            {
+                                                addCashDoc.CashSalePayment = AutoCount.Invoicing.Sales.SalesPayment.Create(
+                                                                            addCashDoc.ReferPaymentDocKey, addCashDoc.DocKey,
+                                                                            AutoCount.Document.DocumentType.CashSale, this.connection.userSession, connection.dBSetting);
+                                            }
 
-                                                addCashDoc.CashSalePayment.DebtorCode = addCashDoc.DebtorCode;
-                                                addCashDoc.CashSalePayment.CurrencyCode = addCashDoc.CurrencyCode;
-                                                addCashDoc.CashSalePayment.DocDate = addCashDoc.DocDate;
+                                            addCashDoc.CashSalePayment.DebtorCode = addCashDoc.DebtorCode;
+                                            addCashDoc.CashSalePayment.CurrencyCode = addCashDoc.CurrencyCode;
+                                            addCashDoc.CashSalePayment.DocDate = addCashDoc.DocDate;
 
                                             if (isATCv2)
                                             {

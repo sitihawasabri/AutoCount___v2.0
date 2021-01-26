@@ -91,12 +91,12 @@ namespace EasySales
 
                     return doc;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     logger.Broadcast("-----> catch: " + ex.Message);
                     return null;
                 }
-                
+
             }
             else
             {
@@ -128,6 +128,75 @@ namespace EasySales
                 try
                 {
                     AutoCount.Invoicing.Sales.Invoice.InvoiceDetail dtl;
+                    dtl = doc.AddDetail();
+                    logger.Broadcast("added dtl");
+                    return dtl;
+                }
+                catch (Exception ex)
+                {
+                    logger.Broadcast("-----> dtl catch: " + ex.Message);
+                    return null;
+                }
+            }
+            else
+            {
+                try
+                {
+                    AutoCount.Invoicing.Sales.Invoice.InvoiceDetail dtl;
+                    dtl = doc.AddDetail();
+                    logger.Broadcast("bce added dtl");
+                    return dtl;
+                }
+                catch (Exception ex)
+                {
+                    logger.Broadcast("-----> dtl catch: " + ex.Message);
+                    return null;
+                }
+            }
+        }
+
+        public dynamic NewCreditNote()
+        {
+            GlobalLogger logger = new GlobalLogger();
+
+            logger.Broadcast("isV2: " + isV2);
+
+            if (isV2)
+            {
+                try
+                {
+                    logger.Broadcast("this.isV2 = " + this.isV2);
+                    logger.Broadcast("this.connection.userSession: " + this.connection.userSession);
+                    logger.Broadcast("this.connection.userSession.DBSetting: " + this.connection.userSession.DBSetting);
+
+                    AutoCountV2.Message("this.isV2 = " + this.isV2 + "this.connection.userSession: " + this.connection.userSession + "this.connection.userSession.DBSetting: " + this.connection.userSession.DBSetting);
+
+                    AutoCount.ARAP.ARCN.ARCNDataAccess cmd = AutoCount.ARAP.ARCN.ARCNDataAccess.Create(this.connection.userSession, this.connection.userSession.DBSetting);
+                    AutoCount.ARAP.ARCN.ARCNEntity doc = cmd.NewARCN();
+
+                    logger.Broadcast("doc = " + doc);
+
+                    return doc;
+                }
+                catch (Exception ex)
+                {
+                    logger.Broadcast("-----> catch: " + ex.Message);
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        public dynamic NewCreditNoteDetails(dynamic doc)
+        {
+            GlobalLogger logger = new GlobalLogger();
+            logger.Broadcast("----- creating doc details");
+            if (isV2)
+            {
+                try
+                {
+                    //AutoCount.ARAP.ARCN.ARCNDTLEntity dtl = null;
+                    AutoCount.Invoicing.Sales.CreditNote.CreditNoteDetail dtl;
                     dtl = doc.AddDetail();
                     logger.Broadcast("added dtl");
                     return dtl;

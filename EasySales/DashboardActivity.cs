@@ -2470,16 +2470,16 @@ namespace EasySales
                 logger.message = "[AUTOCOUNT] warehouse quantity sync is set to run now";
                 logger.Broadcast();
 
-                if(cb_sdk_atc.Checked)
-                {
-                    new JobATCWarehouseSync().Execute();
-                    new JobATCWHReadyStock().Execute();
-                }
-                else
-                {
+                //if(cb_sdk_atc.Checked)
+                //{
+                    //new JobATCWarehouseSync().Execute();
+                    //new JobATCWHReadyStock().Execute();
+                //}
+                //else
+                //{
                     new JobATCWarehouseSync().Execute();
                     new JobATCWarehouseQtySync().Execute();
-                }
+                //}
                 
             }
             else if (accSoftware.software_name == "Sage UBS")
@@ -2789,8 +2789,12 @@ namespace EasySales
             }
             else if (accSoftware.software_name == "AutoCount")
             {
-                logger.message = "[AutoCount] This button is not enabled for this job";
-                logger.Broadcast();
+                if(cb_sdk_atc.Checked)
+                {
+                    logger.message = "[AutoCount] Transfer Sales CNs sync is set to run now";
+                    logger.Broadcast();
+                    new JobATCTransferCNSDK().Execute();
+                }
             }
             else if (accSoftware.software_name == "Sage UBS")
             {

@@ -20,6 +20,7 @@ using Quartz.Logging;
 using AutoCount.Stock.ItemPackage;
 using AutoCount.Invoicing;
 using AutoCount.Stock;
+using System.Net;
 
 namespace EasySales.Job
 {
@@ -59,6 +60,14 @@ namespace EasySales.Job
                     Thread.CurrentThread.IsBackground = true;
                     GlobalLogger logger = new GlobalLogger();
 
+                    logger.Broadcast("atcSdkSetting");
+
+                    DpprUserSettings atcSdkSetting = LocalDB.GetParticularSetting(Constants.Setting_ATCv2);
+
+                    bool isATCv2 = atcSdkSetting.setting == Constants.YES;
+
+                    logger.Broadcast("isATCv2: " + isATCv2);
+
                     DpprSyncLog slog = new DpprSyncLog();
                     slog.action_identifier = Constants.Action_ATC_Transfer_Stock;
                     slog.action_failure = 0;
@@ -75,6 +84,8 @@ namespace EasySales.Job
                     List<DpprMySQLconfig> mysql_list = LocalDB.GetRemoteDatabaseConfig().Distinct().ToList();
                     List<DpprSQLServerconfig> mssql_list = LocalDB.GetRemoteSQLServerConfig();
 
+                    ArrayList stockIdList = new ArrayList();
+
                     mysql_list.Iterate<DpprMySQLconfig>((mysql_config, index) =>
                     {
                         DpprMySQLconfig mysqlconfig = mysql_list[index];
@@ -83,6 +94,8 @@ namespace EasySales.Job
 
                         string targetDBname = string.Empty;
                         string stStatus = string.Empty;
+                        int sync_stock_card = 0;
+                        int include_ext_no = 0;
 
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("transfer_stock_atc");
@@ -103,8 +116,8 @@ namespace EasySales.Job
                                 }
                             }
 
-                            this.connection = ATC_Configuration.Init_config();
-                            this.connection.dBSetting = AutoCountV1.PerformAuth(ref this.connection);
+                            //this.connection = ATC_Configuration.Init_config();
+                            //this.connection.dBSetting = AutoCountV1.PerformAuth(ref this.connection);
 
                             string STQuery = "SELECT *, DATE_FORMAT(st_date, '%d/%m/%Y %H:%s:%i') AS order_date_format FROM cms_stock_transfer WHERE st_status = " + stStatus + " AND cancel_status = 0 AND st_fault = 0 ";
                             //order_id = "\"SO-SS-001\",\"SO-SS-003\",\"SO-SS-002\"";
@@ -117,6 +130,12 @@ namespace EasySales.Job
                             mysql.Message(STQuery);
 
                             logger.Broadcast("Total stock to be transferred: " + queryResult.Count);
+
+                            ATChandler autoCount = new ATChandler(isATCv2);
+                            this.connection = autoCount.PerformAuth();
+
+                            logger.Broadcast("Succesfully getting the user session");
+                            ArrayList onlyItemToSync = new ArrayList();
 
                             if (queryResult.Count == 0)
                             {
@@ -139,7 +158,8 @@ namespace EasySales.Job
                                         logger.Broadcast("Transfer Stock data found");
                                         try
                                         {
-                                            AutoCount.Stock.StockTransfer.StockTransferCommand cmd = AutoCount.Stock.StockTransfer.StockTransferCommand.Create(connection.userSession, this.connection.dBSetting);
+                                            AutoCount.Stock.StockTransfer.StockTransferCommand cmd =
+        AutoCount.Stock.StockTransfer.StockTransferCommand.Create(this.connection.userSession, this.connection.userSession.DBSetting);
                                             AutoCount.Stock.StockTransfer.StockTransfer doc = cmd.AddNew();
                                             AutoCount.Stock.StockTransfer.StockTransferDetail dtl = null;
 
@@ -150,6 +170,7 @@ namespace EasySales.Job
                                             doc.Description = "STOCK TRANSFER";
                                             doc.FromLocation = cms_data["from_location"];
                                             doc.ToLocation = cms_data["to_location"];
+                                            doc.Reason = cms_data["note"];
 
                                             //Set to auto populate the item information from Item Maintenance
                                             //such as Item Description
@@ -170,6 +191,7 @@ namespace EasySales.Job
 
                                                     dtl = doc.AddDetail();
                                                     dtl.ItemCode = cms_data_item["product_code"];
+                                                    onlyItemToSync.Add(cms_data_item["product_code"]);
                                                     dtl.UOM = cms_data_item["unit_uom"];
                                                     dtl.Qty = quantity;
                                                 }
@@ -180,7 +202,7 @@ namespace EasySales.Job
                                                 logger.Broadcast("Trying to create Stock Transfer");
                                                 doc.Save();
                                                 //log success
-
+                                                stockIdList.Add(stCode);
                                                 logger.Broadcast("Stock Transfer [" + stCode + "] created");
                                                 int.TryParse(stStatus, out int int_order_status);
                                                 int updateStStatus = int_order_status + 1;
@@ -201,6 +223,9 @@ namespace EasySales.Job
                                                         goto checkUpdateStatus;
                                                     }
                                                 }
+
+                                                new JobATCStockCardSync().ExecuteSyncTodayOnly("1");
+                                                new JobATCWarehouseQtySync().ExecuteOnlyItem(onlyItemToSync);
                                             }
                                             catch (AutoCount.AppException ex)
                                             {
@@ -271,7 +296,7 @@ namespace EasySales.Job
                     mysql_list.Clear();
                     mssql_list.Clear();
 
-                    slog.action_identifier = Constants.Action_ATC_Transfer_SO;
+                    slog.action_identifier = Constants.Action_ATC_Transfer_Stock;
                     slog.action_failure = 0;
                     slog.action_failure_message = string.Empty;
                     slog.action_time = DateTime.Now.ToString();
@@ -285,6 +310,30 @@ namespace EasySales.Job
                     logger.message = "Transfer Stock (SDK) finished in (" + ts.TotalSeconds.ToString("F") + " seconds)";
                     logger.Broadcast();
 
+                    Task.Delay(10000);
+
+                    List<DpprMySQLconfig> _mysql_list = LocalDB.GetRemoteDatabaseConfig().Distinct().ToList();
+                    DpprMySQLconfig _mysql_config = _mysql_list[0];
+                    string _companyName = _mysql_config.config_database;
+                    string companyName = _companyName.ReplaceAll("", "easysale_");
+                    companyName = companyName.ReplaceAll("", "easyicec_");
+
+                    companyName = companyName == "chillmjb" ? companyName = "chillm_jb" : companyName;
+                    companyName = companyName == "chillmkdh" ? companyName = "chillm_kdh" : companyName;
+                    companyName = companyName == "ibeauty" ? companyName = "insidergroup" : companyName;
+
+                    for (int ixx = 0; ixx < stockIdList.Count; ixx++)
+                    {
+                        string stock_id = stockIdList[ixx].ToString();
+                        var _url = string.Format("https://easysales.asia/esv2/webview/iManage/stkTransferNotf.php?stock_id={0}&client={1}", stock_id, companyName);
+                        logger.Broadcast("API url: " + _url);
+                        using (var webClient = new WebClient())
+                        {
+                            var response = webClient.DownloadString(_url);
+                            logger.Broadcast("Notification sent to the salesman!");
+                            Console.WriteLine(response);
+                        }
+                    }
                 });
 
                 thread.Start();

@@ -116,6 +116,7 @@ namespace EasySales.Object
         public static string Action_ATC_Transfer_Stock = "ATCTransferStock";                                                  /* ATC */
         public static string Action_ATC_Transfer_CS = "ATCTransferCS";                                                  /* ATC */
         public static string Action_ATC_Transfer_INV = "ATCTransferINV";                                                  /* ATC */
+        public static string Action_ATC_Transfer_CN = "ATCTransferCN";                                                  /* ATC */
         public static string Action_ATCStockCardSync = "atcstockcard_sync";                                                  /* ATC */
         public static string Action_ATCWHReadyStockSync = "atcwhreadystock_sync";
         /* AUTO COUNT */
@@ -297,6 +298,7 @@ namespace EasySales.Object
         public static string Job_ATCReceipt = "ATCReceiptSync";                                                                 /* ATC */
         public static string Job_ATCTransferSO = "ATCTransferSO";                                                                       /* ATC */
         public static string Job_ATCTransferSOSDK = "ATCTransferSOSDK";                                                                       /* ATC */
+        public static string Job_ATCTransferCNSDK = "ATCTransferCNSDK";                                                                       /* ATC */
         public static string Job_ATCBranch = "ATCBranch";                                                                       /* ATC */
         public static string Job_ATCItemTemplate = "ATCItemTemplate";                                                                       /* ATC */
         public static string Job_ATCItemTemplateDtl = "ATCItemTemplateDtl";                                                                       /* ATC */

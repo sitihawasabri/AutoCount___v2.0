@@ -1780,20 +1780,20 @@ namespace EasySales.Model
 
                         if (ATCSDKEnabled)
                         {
-                            IJobDetail atcreadystockjob = JobBuilder.Create<JobATCReadyStock>()                                       /* ATC */
-                        .WithIdentity(Constants.Job_ATCReadyStock, Constants.Job_Group_Sync)
-                        .Build();
+                        //    IJobDetail atcreadystockjob = JobBuilder.Create<JobATCReadyStock>()                                       /* ATC */
+                        //.WithIdentity(Constants.Job_ATCReadyStock, Constants.Job_Group_Sync)
+                        //.Build();
 
-                            ITrigger atcreadystocktrigger = TriggerBuilder.Create()
-                                .WithIdentity(Constants.Trigger_ATCReadyStock, Constants.Job_Group_Sync)
-                                .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(StockInterval)))
-                                .WithSimpleSchedule(x => x
-                                    .WithIntervalInSeconds(GetSecondsFromMinute(StockInterval))
-                                    .RepeatForever())
-                                .Build();
+                        //    ITrigger atcreadystocktrigger = TriggerBuilder.Create()
+                        //        .WithIdentity(Constants.Trigger_ATCReadyStock, Constants.Job_Group_Sync)
+                        //        .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(StockInterval)))
+                        //        .WithSimpleSchedule(x => x
+                        //            .WithIntervalInSeconds(GetSecondsFromMinute(StockInterval))
+                        //            .RepeatForever())
+                        //        .Build();
 
-                            logger.message = string.Format("ATC Ready Stock (SDK) trigger is set with interval of {0} min", StockInterval);
-                            logger.Broadcast();
+                        //    logger.message = string.Format("ATC Ready Stock (SDK) trigger is set with interval of {0} min", StockInterval);
+                        //    logger.Broadcast();
 
                             IJobDetail atcstockcardjob = JobBuilder.Create<JobATCStockCardSync>()                                       /* ATC */
                         .WithIdentity(Constants.Job_ATCStockCardSync, Constants.Job_Group_Sync)
@@ -1810,7 +1810,7 @@ namespace EasySales.Model
                             logger.message = string.Format("ATC stock card (SDK) trigger is set with interval of {0} min", StockInterval);
                             logger.Broadcast();
 
-                            await scheduler.ScheduleJob(atcreadystockjob, atcreadystocktrigger);
+                            //await scheduler.ScheduleJob(atcreadystockjob, atcreadystocktrigger);
                             await scheduler.ScheduleJob(atcstockcardjob, atcstockcardtrigger);
                             ActiveJobs++;
                             ActiveJobs++;
@@ -1908,27 +1908,27 @@ namespace EasySales.Model
                         logger.message = string.Format("ATC warehouse trigger is set with interval of {0} min", WarehouseInterval);
                         logger.Broadcast();
 
-                        if(ATCSDKEnabled)
-                        {
-                            IJobDetail atcwarehouseqtyjob = JobBuilder.Create<JobATCWHReadyStock>()                               /* ATC */
-                                                    .WithIdentity(Constants.Job_ATCWarehouseQty, Constants.Job_Group_Sync)
-                                                    .Build();
+                        //if(ATCSDKEnabled)
+                        //{
+                        //    IJobDetail atcwarehouseqtyjob = JobBuilder.Create<JobATCWHReadyStock>()                               /* ATC */
+                        //                            .WithIdentity(Constants.Job_ATCWarehouseQty, Constants.Job_Group_Sync)
+                        //                            .Build();
 
-                            ITrigger atcwarehouseqtytrigger = TriggerBuilder.Create()
-                                .WithIdentity(Constants.Trigger_ATCWarehouseQty, Constants.Job_Group_Sync)
-                                .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(WarehouseInterval)))
-                                .WithSimpleSchedule(x => x
-                                    .WithIntervalInSeconds(GetSecondsFromMinute(WarehouseInterval))
-                                    .RepeatForever())
-                                .Build();
+                        //    ITrigger atcwarehouseqtytrigger = TriggerBuilder.Create()
+                        //        .WithIdentity(Constants.Trigger_ATCWarehouseQty, Constants.Job_Group_Sync)
+                        //        .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(WarehouseInterval)))
+                        //        .WithSimpleSchedule(x => x
+                        //            .WithIntervalInSeconds(GetSecondsFromMinute(WarehouseInterval))
+                        //            .RepeatForever())
+                        //        .Build();
 
-                            logger.message = string.Format("ATC Warehouse Ready Stock (SDK) trigger is set with interval of {0} min", WarehouseInterval);
-                            logger.Broadcast();
+                        //    logger.message = string.Format("ATC Warehouse Ready Stock (SDK) trigger is set with interval of {0} min", WarehouseInterval);
+                        //    logger.Broadcast();
 
-                            await scheduler.ScheduleJob(atcwarehouseqtyjob, atcwarehouseqtytrigger);
-                        }
-                        else
-                        {
+                        //    await scheduler.ScheduleJob(atcwarehouseqtyjob, atcwarehouseqtytrigger);
+                        //}
+                        //else
+                        //{
                             IJobDetail atcwarehouseqtyjob = JobBuilder.Create<JobATCWarehouseQtySync>()                               /* ATC */
                                                     .WithIdentity(Constants.Job_ATCWarehouseQty, Constants.Job_Group_Sync)
                                                     .Build();
@@ -1945,7 +1945,7 @@ namespace EasySales.Model
                             logger.Broadcast();
 
                             await scheduler.ScheduleJob(atcwarehouseqtyjob, atcwarehouseqtytrigger);
-                        }
+                        //}
 
                         await scheduler.ScheduleJob(atcwarehousejob, atcwarehousetrigger);
                         ActiveJobs++;
@@ -2740,6 +2740,26 @@ namespace EasySales.Model
                         logger.Broadcast();
 
                         await scheduler.ScheduleJob(apspostsalescnsjob, apspostsalescnstrigger);
+                        ActiveJobs++;
+                    }
+                    else if (accSoftware.software_name == "AutoCount")
+                    {
+                        IJobDetail atcpostsalescnsjob = JobBuilder.Create<JobATCTransferCNSDK>()
+                  .WithIdentity(Constants.Job_ATCTransferCNSDK, Constants.Job_Group_Transfer)
+                  .Build();
+
+                        ITrigger atcpostsalescnstrigger = TriggerBuilder.Create()
+                          .WithIdentity(Constants.Trigger_Post_SalesCNs, Constants.Job_Group_Transfer)
+                          .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(PostSalesCNsInterval)))
+                          .WithSimpleSchedule(x => x
+                              .WithIntervalInSeconds(GetSecondsFromMinute(PostSalesCNsInterval))
+                              .RepeatForever())
+                          .Build();
+
+                        logger.message = string.Format("AutoCount SDK Transfer CNs trigger is set with interval of {0} min", PostSalesCNsInterval);
+                        logger.Broadcast();
+
+                        await scheduler.ScheduleJob(atcpostsalescnsjob, atcpostsalescnstrigger);
                         ActiveJobs++;
                     }
                     else

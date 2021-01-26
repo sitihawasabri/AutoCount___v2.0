@@ -61,85 +61,85 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AutoCount">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Accounting">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Accounting.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Accounting.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Accounting.UI">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Accounting.UI.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Accounting.UI.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.ARAP">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.ARAP.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.ARAP.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.BusinessFlow">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.BusinessFlow.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.BusinessFlow.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.GeneralMaint">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.GeneralMaint.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.GeneralMaint.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.GL">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.GL.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.GL.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.GL.FinancialReport">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.GL.FinancialReport.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.GL.FinancialReport.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.GST">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.GST.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.GST.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.ImportExport">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.ImportExport.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.ImportExport.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Inquiry">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Inquiry.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Inquiry.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Invoicing">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Invoicing.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Invoicing.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Invoicing.Purchase">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Invoicing.Purchase.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Invoicing.Purchase.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Invoicing.Sales">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Invoicing.Sales.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Invoicing.Sales.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.MainEntry">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.MainEntry.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.MainEntry.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.MainEntry.XmlSerializers">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.MainEntry.XmlSerializers.dll</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.MainEntry.XmlSerializers.dll</HintPath>
     </Reference>
     <Reference Include="AutoCount.ManageAccountBook">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.ManageAccountBook.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.ManageAccountBook.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.ManagementStudio">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.ManagementStudio.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.ManagementStudio.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Manufacturing">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Manufacturing.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Manufacturing.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.StartScreen">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.StartScreen.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.StartScreen.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Stock">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Stock.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Stock.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.StockMaint">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.StockMaint.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.StockMaint.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Tools">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Tools.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Tools.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Tools.DataUpgrade">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Tools.DataUpgrade.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Tools.DataUpgrade.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.Tools.XmlSerializers">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.Tools.XmlSerializers.dll</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.Tools.XmlSerializers.dll</HintPath>
     </Reference>
     <Reference Include="AutoCount.UI">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.UI.DLL</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.UI.DLL</HintPath>
     </Reference>
     <Reference Include="AutoCount.UI.XmlSerializers">
-      <HintPath>..\..\..\..\..\..\Program Files\AutoCount\Accounting 2.0\AutoCount.UI.XmlSerializers.dll</HintPath>
+      <HintPath>..\..\..\..\ATC v2.0.1.0 dll\AutoCount.UI.XmlSerializers.dll</HintPath>
     </Reference>
     <Reference Include="AutoUpdater.NET, Version=1.6.0.0, Culture=neutral, PublicKeyToken=501435c91b35f4bc, processorArchitecture=MSIL">
       <HintPath>..\packages\Autoupdater.NET.Official.1.6.0\lib\net40\AutoUpdater.NET.dll</HintPath>
@@ -156,6 +156,11 @@
     <Reference Include="Dapper, Version=1.50.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Dapper.1.50.0\lib\net451\Dapper.dll</HintPath>
     </Reference>
+    <Reference Include="DevExpress.Data.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Downloads\DevExpress 19.2.10 dll\DevExpress 19.2.10 dll\dll\DevExpress.Data.v19.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Utils.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
@@ -324,7 +329,6 @@
     <Reference Include="Ubiety.Dns.Core, Version=2.2.1.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.8.0.19\lib\net452\Ubiety.Dns.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Web.DemoData.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
     <Reference Include="websocket-sharp, Version=1.0.4.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
       <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
     </Reference>
@@ -376,6 +380,7 @@
     <Compile Include="Job\AutoCount\JobATCINVKOSync.cs" />
     <Compile Include="Job\AutoCount\JobATCDebitNoteSync.cs" />
     <Compile Include="Job\AutoCount\JobATCOutstandingSO.cs" />
+    <Compile Include="Job\AutoCount\JobATCTransferCNSDK.cs" />
     <Compile Include="Job\AutoCount\JobATCTransferINVSDK.cs" />
     <Compile Include="Job\AutoCount\JobATCTransferINV.cs" />
     <Compile Include="Job\AutoCount\JobATCTransferSOSDKv2.cs" />

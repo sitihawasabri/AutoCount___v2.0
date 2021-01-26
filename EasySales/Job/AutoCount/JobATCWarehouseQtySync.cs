@@ -21,6 +21,12 @@ namespace EasySales.Job
     [DisallowConcurrentExecution]
     public class JobATCWarehouseQtySync : IJob
     {
+        private ArrayList onlyItem = new ArrayList();
+        public void ExecuteOnlyItem(ArrayList onlyItem)
+        {
+            this.onlyItem = onlyItem;
+            Execute();
+        }
         public void Execute()
         {
             this.Run();
@@ -80,11 +86,13 @@ namespace EasySales.Job
                             {
                                 if (key.mssql != null && key.mssql.GetType().ToString() == "Newtonsoft.Json.Linq.JArray")
                                 {
-                                    string query = "SELECT * FROM ItemBalQty";
+                                    //string query = "SELECT * FROM ItemBalQty";
+                                    string query = "SELECT * FROM ";
 
                                     var mssql_rules = key.mssql;
                                     foreach (var db in mssql_rules)
                                     {
+                                        string table_name = db.table_name;
                                         string wh_date = string.Empty;
                                         string wh_null = string.Empty;
                                         string wh_join = string.Empty;
@@ -93,6 +101,9 @@ namespace EasySales.Job
                                         ArrayList exclude = new ArrayList();
                                         ArrayList whList = new ArrayList();
                                         Dictionary<string, string> whListPair = new Dictionary<string, string>();
+
+                                        query += " " + table_name + "";
+                                        //query += " WHERE ItemCode = '@itemCode'";// AND UOM = '@uom'";
 
                                         if (db.include.GetType().ToString() == "Newtonsoft.Json.Linq.JArray" && db.include.Count > 0)
                                         {
@@ -140,6 +151,27 @@ namespace EasySales.Job
                         }
 
                         //SELECT whbw.dtModifyDate, whhq.dtModifyDate, stk.intInvID, charlocation1, stk.charItemCode as [ItemCode], su.varStockUnitNm as [UOM], isnull(whhq.decQtyOnHand, 0) as [Qty1], isnull(whkl.decQtyOnHand, 0) as [Qty2], isnull(whbw.decQtyOnHand, 0) as [Qty3], isnull(whjb.decQtyOnHand, 0) as [Qty4], isnull(whpi.decQtyOnHand, 0) as [Qty5], isnull(whkj.decQtyOnHand, 0) as [Qty6], po.decQtyOnOrder as [POQty] from inv_stocktbl stk inner join inv_stockunittbl su on stk.intStockUnitID = su.intStockUnitID and stk.charItemCode != '' and stk.charItemCode not like '%deleted%' left outer join vwActiveInv_WarehouseStockTbl whhq on stk.intinvid = whhq.intinvid and whhq.intWarehouseID = 1 left outer join vwActiveInv_WarehouseStockTbl whkl on stk.intinvid = whkl.intinvid and whkl.intWarehouseID = 2 left outer join vwActiveInv_WarehouseStockTbl whbw on stk.intinvid = whbw.intinvid and whbw.intWarehouseID = 3 left outer join vwActiveInv_WarehouseStockTbl whjb on stk.intinvid = whjb.intinvid and whjb.intWarehouseID = 4 left outer join vwActiveInv_WarehouseStockTbl whpi on stk.intinvid = whpi.intinvid and whpi.intWarehouseID = 5 left outer join vwActiveInv_WarehouseStockTbl whkj on stk.intinvid = whkj.intinvid and whkj.intWarehouseID = 10003 left outer join Pur_POOffSetTbl po on stk.intinvid = po.intinvid WHERE stk.blnIsDelete = 'false' and whhq.dtModifyDate >= '2020-09-01' or whkl.dtModifyDate >= '2020-09-01' or whbw.dtModifyDate >= '2020-09-01' or whjb.dtModifyDate >= '2020-09-01' or whpi.dtModifyDate >= '2020-09-01' or whkj.dtModifyDate >= '2020-09-01'
+                        //SELECT product_code, product_uom FROM cms_product_uom_price_v2 WHERE product_default_price = 1 AND active_status = 1
+                        ArrayList baseUom = mysql.Select("SELECT product_code, product_uom FROM cms_product_uom_price_v2 WHERE product_default_price = 1 AND active_status = 1");
+
+                        Dictionary<string, string> uniqueKeyList = new Dictionary<string, string>();
+                        for (int i = 0; i < baseUom.Count; i++)
+                        {
+                            Dictionary<string, string> each = (Dictionary<string, string>)baseUom[i];
+                            string product_code = each["product_code"].ToString();
+                            string product_uom = each["product_uom"].ToString();
+                            uniqueKeyList.Add(product_code, product_uom);
+                        }
+                        baseUom.Clear();
+
+                        ArrayList itemFromDb = mysql.Select("SELECT product_code FROM cms_product WHERE product_status = 1");
+                        ArrayList itemList = new ArrayList();
+                        for (int i = 0; i < itemFromDb.Count; i++)
+                        {
+                            Dictionary<string, string> each = (Dictionary<string, string>)itemFromDb[i];
+                            itemList.Add(each["product_code"]);
+                        }
+                        itemFromDb.Clear();
 
                         ArrayList warehouseItemInMySQL = mysql.Select("SELECT wh_code FROM cms_warehouse WHERE wh_status = 1");
                         ArrayList warehouseItemList = new ArrayList();
@@ -151,15 +183,11 @@ namespace EasySales.Job
                         }
                         warehouseItemInMySQL.Clear();
 
+
                         mssql_rule.Iterate<ATCRule>((database, idx) =>
                         {
                             SQLServer mssql = new SQLServer();
                             mssql.Connect(dbname: database.DBname);
-
-                            logger.Broadcast(database.Query);
-
-                            ArrayList queryResult = mssql.Select(database.Query);
-                            Console.WriteLine("queryResult.Count: " + queryResult.Count);
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -206,10 +234,49 @@ namespace EasySales.Job
                                 mysqlFieldList.Add(mysqlField);
                             });
 
+                            if (this.onlyItem.Count > 0)
+                            {
+                                itemList = this.onlyItem;
+                            }
+
+                            HashSet<string> inProdCode = new HashSet<string>();
+                            for (int i = 0; i < itemList.Count; i++)
+                            {
+                                string __prodCode = itemList[i].ToString();
+                                inProdCode.Add(__prodCode);
+                            }
+
+                            string toBeSelected = "'" + string.Join("','", inProdCode) + "'";
+                            Console.WriteLine(toBeSelected);
+
+                            database.Query += " WHERE ItemCode IN (" + toBeSelected + ")";
+
+                            //for (int ixx = 0; ixx < itemList.Count; ixx++)
+                            //{
+                            //string getWhQty = database.Query.Replace("@itemCode", productCode);
+                            //if (uniqueKeyList.ContainsKey(productCode))
+                            //{
+                            //    var value = uniqueKeyList.Where(pair => pair.Key == productCode)
+                            //                .Select(pair => pair.Value)
+                            //                .FirstOrDefault();
+                            //    uomName = value;
+                            //    Console.WriteLine(value);
+                            //}
+                            //getWhQty = getWhQty.Replace("@uom", uomName);
+                            //ArrayList queryResult = mssql.Select(getWhQty);
+                            //logger.Broadcast(getWhQty);
+                            //Console.WriteLine("queryResult.Count: " + queryResult.Count);
+
+                            string productCode = string.Empty;
+                            string uomName = string.Empty;
+
+                            ArrayList queryResult = mssql.Select(database.Query);
+
                             HashSet<string> valueString = new HashSet<string>();
                             queryResult.Iterate<Dictionary<string, string>>((map, i) =>
                             {
                                 string row = string.Empty;
+                                string finalUOM = string.Empty;
 
                                 database.Include.Iterate<Dictionary<string, string>>((include, inIdx) =>
                                 {
@@ -256,6 +323,55 @@ namespace EasySales.Job
                                             row += inIdx == 0 ? "('" + updated_at + "" : "','" + updated_at + "";
                                             addedToRow = true;
                                         }
+                                    }
+
+                                    if (find_mssql_field == "ItemCode")
+                                    {
+                                        map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
+                                        {
+                                            if (mssql_fields.Key == "ItemCode")
+                                            {
+                                                productCode = mssql_fields.Value;
+
+                                                Database.Sanitize(ref productCode);
+                                                row += inIdx == 0 ? "('" + productCode + "" : "','" + productCode;
+                                            }
+                                        });
+
+                                        NoMssqlField = false;
+                                        addedToRow = true;
+                                    }
+
+                                    if (find_mssql_field == "UOM")
+                                    {
+                                        string UOMFROMMSSQL = string.Empty;
+
+                                        map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
+                                        {
+                                            if (mssql_fields.Key == "UOM")
+                                            {
+                                                UOMFROMMSSQL = mssql_fields.Value;
+
+                                                if (uniqueKeyList.ContainsKey(productCode))
+                                                {
+                                                    var value = uniqueKeyList.Where(pair => pair.Key == productCode)
+                                                                .Select(pair => pair.Value)
+                                                                .FirstOrDefault();
+                                                    uomName = value;
+                                                    Console.WriteLine(value);
+                                                }
+
+                                                if (UOMFROMMSSQL == uomName)
+                                                {
+                                                    finalUOM = UOMFROMMSSQL;
+                                                    Database.Sanitize(ref UOMFROMMSSQL);
+                                                    row += inIdx == 0 ? "('" + UOMFROMMSSQL + "" : "','" + UOMFROMMSSQL;
+                                                }
+                                            }
+                                        });
+
+                                        NoMssqlField = false;
+                                        addedToRow = true;
                                     }
 
                                     map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
@@ -309,37 +425,39 @@ namespace EasySales.Job
                                 });
 
                                 row += "')";
-                                valueString.Add(row);
-                                RecordCount++;
-                            
-                                if (valueString.Count % 2000 == 0)
+                                if (finalUOM != string.Empty)
                                 {
-                                    string values = valueString.Join(",");
+                                    valueString.Add(row);
+                                    RecordCount++;
 
-                                    insertQuery = insertQuery.ReplaceAll(values, "@values");
+                                    if (valueString.Count % 2000 == 0)
+                                    {
+                                        string values = valueString.Join(",");
 
-                                    mysql.Insert(insertQuery);
-                                    mysql.Message(insertQuery);
-                                    Thread.Sleep(5000);
+                                        insertQuery = insertQuery.ReplaceAll(values, "@values");
 
-                                    insertQuery = insertQuery.ReplaceAll("@values", values);
-                                    valueString.Clear();
+                                        mysql.Insert(insertQuery);
+                                        mysql.Message("ATC WH QTY Query: " + insertQuery);
+                                        Thread.Sleep(5000);
 
-                                    logger.message = string.Format("{0} warehouse quantity records is inserted into " + mysqlconfig.config_database, RecordCount);
-                                    logger.Broadcast();
+                                        insertQuery = insertQuery.ReplaceAll("@values", values);
+                                        valueString.Clear();
+
+                                        logger.message = string.Format("{0} warehouse quantity records is inserted into " + mysqlconfig.config_database, RecordCount);
+                                        logger.Broadcast();
+                                    }
                                 }
 
                             });
-                            
 
-                            if (valueString.Count > 0) 
+                            if (valueString.Count > 0)
                             {
                                 string values = valueString.Join(",");
 
                                 insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                 mysql.Insert(insertQuery);
-                                mysql.Message(insertQuery);
+                                mysql.Message("ATC WH QTY Query: " + insertQuery);
                                 Thread.Sleep(5000);
                                 mysql.Insert("UPDATE cms_product p JOIN cms_warehouse_stock ws ON p.product_code = ws.product_code SET p.updated_at = ws.updated_at WHERE ws.updated_at > p.updated_at");
                                 insertQuery = insertQuery.ReplaceAll("@values", values);
@@ -356,7 +474,7 @@ namespace EasySales.Job
                             {
                                 mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_warehouse_stock', NOW())");
                             }
-                            
+
                             RecordCount = 0; /* reset count for the next database */
                             mysqlFieldList.Clear();
                             queryResult.Clear();
