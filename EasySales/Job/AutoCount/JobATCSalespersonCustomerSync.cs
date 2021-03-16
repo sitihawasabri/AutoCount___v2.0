@@ -141,7 +141,10 @@ namespace EasySales.Job
                         for (int i = 0; i < salespersonFromDb.Count; i++)
                         {
                             Dictionary<string, string> each = (Dictionary<string, string>)salespersonFromDb[i];
-                            salespersonList.Add(each["staff_code"], each["login_id"]);
+                            if (!salespersonList.ContainsKey(each["staff_code"]))
+                            {
+                                salespersonList.Add(each["staff_code"], each["login_id"]);
+                            }
                         }
                         salespersonFromDb.Clear();
 
@@ -151,11 +154,30 @@ namespace EasySales.Job
                         for (int i = 0; i < customerFromDb.Count; i++)
                         {
                             Dictionary<string, string> each = (Dictionary<string, string>)customerFromDb[i];
-                            customerList.Add(each["cust_code"], each["cust_id"]);
+                            if(!customerList.ContainsKey(each["cust_code"]))
+                            {
+                                customerList.Add(each["cust_code"], each["cust_id"]);
+                            }
                         }
                         customerFromDb.Clear();
-
                         //Console.WriteLine("customerList.Count: " + customerList.Count);
+
+                        string getCustAgent = "SELECT salesperson_customer_id, salesperson_id, customer_id FROM cms_customer_salesperson WHERE active_status = 1 ";
+                        Console.WriteLine("getCustAgentQuery: " + getCustAgent);
+                        ArrayList custAgentFromDb = mysql.Select(getCustAgent);
+                        Dictionary<string, string> custAgentList = new Dictionary<string, string>();
+
+                        for (int i = 0; i < custAgentFromDb.Count; i++)
+                        {
+                            Dictionary<string, string> each = (Dictionary<string, string>)custAgentFromDb[i];
+                            string custAgentId = each["customer_id"] + "(" + each["salesperson_id"] + ")";
+                            if(!custAgentList.ContainsKey(each["salesperson_customer_id"]))
+                            {
+                                custAgentList.Add(each["salesperson_customer_id"], custAgentId);
+                            }
+                        }
+
+                        Console.WriteLine("custAgentList.Count: " + custAgentList.Count);
 
                         mssql_rule.Iterate<ATCRule>((database, idx) =>
                         {
@@ -163,7 +185,7 @@ namespace EasySales.Job
                             mssql.Connect(dbname: database.DBname);
 
                             ArrayList queryResult = mssql.Select(database.Query);
-                            //Console.WriteLine(database.Query);
+                            mssql.Message("Cust-Agent MSSQL Query ===> " + database.Query);
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -262,6 +284,19 @@ namespace EasySales.Job
                                 //Console.WriteLine("custId: " + custId + " salespersonId: " + salespersonId);
                                 if (custId != "0" && salespersonId != "0")
                                 {
+                                    string uniqueKey = custId + "(" + salespersonId + ")";
+                                    Console.WriteLine(uniqueKey);
+
+                                    if (custAgentList.ContainsValue(uniqueKey))
+                                    {
+                                        var key = custAgentList.Where(pair => pair.Value == uniqueKey)
+                                                    .Select(pair => pair.Key)
+                                                    .FirstOrDefault();
+                                        if (key != null)
+                                        {
+                                            custAgentList.Remove(key);
+                                        }
+                                    }
                                     row = "('" + custId + "','" + salespersonId + "', '" +activeStatus+ "')";
                                     //Console.WriteLine(row);
                                 }
@@ -304,6 +339,29 @@ namespace EasySales.Job
                                 logger.message = string.Format("{0} customer-salesperson records is inserted into " + mysqlconfig.config_database, valueString.Count);
                                 logger.Broadcast();
                                 valueString.Clear();
+                            }
+
+                            if (custAgentList.Count > 0)
+                            {
+                                logger.Broadcast("Total cust-agent records to be deactivated: " + custAgentList.Count);
+
+                                HashSet<string> deactivateId = new HashSet<string>();
+                                for (int i = 0; i < custAgentList.Count; i++)
+                                {
+                                    string _id = custAgentList.ElementAt(i).Key;
+                                    deactivateId.Add(_id);
+                                }
+
+                                string ToBeDeactivate = "'" + string.Join("','", deactivateId) + "'";
+                                Console.WriteLine(ToBeDeactivate);
+
+                                string inactive = "UPDATE cms_customer_salesperson SET active_status = 0 WHERE salesperson_customer_id IN (" + ToBeDeactivate + ")";
+                                mysql.Message("Cust-Agent Deactivate Query ======> " + inactive);
+                                mysql.Insert(inactive);
+
+                                logger.Broadcast(custAgentList.Count + " cust-agent records deactivated");
+
+                                custAgentList.Clear();
                             }
 
                             if (cms_updated_time.Count > 0)

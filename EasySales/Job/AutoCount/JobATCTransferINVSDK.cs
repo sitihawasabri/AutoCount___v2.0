@@ -181,8 +181,22 @@ namespace EasySales.Job
                                         string invItemQuery = "SELECT oi.order_item_id, oi.disc_1, oi.disc_2, oi.disc_3 , oi.order_id, oi.ipad_item_id, oi.product_id, oi.salesperson_remark, oi.quantity, oi.editted_quantity, oi.unit_price, oi.unit_uom,oi.attribute_remark,oi.optional_remark, oi.discount_method, oi.discount_amount, oi.sub_total, oi.sequence_no, oi.uom_id, oi.packing_status, oi.packed_by, oi.cancel_status, oi.updated_at, cms_product.*, up.product_uom_rate, up.product_min_price FROM cms_order_item AS oi LEFT JOIN cms_product ON oi.product_code = cms_product.product_code LEFT JOIN cms_product_uom_price_v2 up ON up.product_code = oi.product_code AND up.product_uom = oi.unit_uom WHERE cancel_status = 0 AND  order_id = '" + inv_id + "'";
                                         ArrayList itemList = mysql.Select(invItemQuery);
 
+                                        ArrayList getParentFOCItem = mysql.Select("SELECT product_code, parent_code FROM cms_order_item WHERE order_id = '" + inv_id + "' AND parent_code = 'FOC' AND cancel_status = 0");
+                                        ArrayList parentProdCodeList = new ArrayList();
+                                        for (int ix = 0; ix < getParentFOCItem.Count; ix++)
+                                        {
+                                            Dictionary<string, string> each = (Dictionary<string, string>)getParentFOCItem[ix];
+                                            string parentProdCode = each["product_code"];
+                                            parentProdCodeList.Add(parentProdCode);
+                                        }
+
                                         logger.Broadcast("Invoice Item Query: " + invItemQuery);
                                         logger.Broadcast("ItemListCount: " + itemList.Count);
+
+                                        logger.Broadcast("parentProdCodeList.Count: " + parentProdCodeList.Count);
+
+                                        ArrayList focItemList = new ArrayList();
+
                                         if (itemList.Count > 0)
                                         {
                                             ArrayList wh_stk_adj = new ArrayList();
@@ -206,10 +220,18 @@ namespace EasySales.Job
 
                                                 string discount = discountAmount + "%";
 
+                                                string orderItemId = item["order_item_id"];
+                                                if (focItemList.Contains(orderItemId))
+                                                {
+                                                    //skip FOC items
+                                                    goto NextItem;
+                                                }
+
                                                 logger.Broadcast("Inserting the items");
                                                 dynamic dtl = autoCount.NewInvoiceDetails(doc);
-                                                dtl.AccNo = "500-00000";
-                                                dtl.ItemCode = item["product_code"];
+                                                dtl.AccNo = "500-00000"; 
+                                                string itemCode = item["product_code"];
+                                                dtl.ItemCode = itemCode;
                                                 onlyItemToSync.Add(item["product_code"]);
 
                                                 logger.Broadcast("Product code: " + item["product_code"]);
@@ -223,12 +245,41 @@ namespace EasySales.Job
                                                 dtl.SubTotal = sub_total;
                                                 dtl.Location = cms_data["warehouse_code"];
                                                 dtl.DiscountAmt = discountAmount;
+                                                string temp_remark = item["salesperson_remark"];
+                                                string temp_furdesc = FormatAsRTF(temp_remark);
+                                                dtl.FurtherDescription = temp_furdesc;
 
                                                 double cloud_qty = 0;
                                                 double.TryParse(item["product_uom_rate"], out cloud_qty);
                                                 cloud_qty = cloud_qty * (double)quantity;
 
+                                                if (parentProdCodeList.Contains(itemCode))
+                                                {
+                                                    //get FOC item
+                                                    ArrayList getFOC = mysql.Select("SELECT order_item_id, product_code, quantity FROM cms_order_item WHERE order_id = '" + inv_id + "' AND parent_code = '" + itemCode + "' AND cancel_status = 0");
+
+                                                    for (int ixx = 0; ixx < getFOC.Count; ixx++)
+                                                    {
+                                                        Dictionary<string, string> each = (Dictionary<string, string>)getFOC[ixx];
+                                                        string qty = each["quantity"];
+                                                        string product_code = each["product_code"];
+                                                        string order_item_id = each["order_item_id"];
+
+                                                        if (product_code == itemCode)
+                                                        {
+                                                            logger.Broadcast("[" + product_code + "] FOC qty ===> " + qty);
+                                                            decimal.TryParse(qty, out decimal __qty);
+                                                            dtl.FOCQty = __qty;
+
+                                                            focItemList.Add(order_item_id);
+                                                        }
+                                                    }
+                                                }
+
                                                 wh_stk_adj.Add("UPDATE cms_warehouse_stock SET cloud_qty = cloud_qty - " + cloud_qty + " WHERE product_code = '" + item["product_code"] + "' AND wh_code = '" + cms_data["warehouse_code"] + "'");
+
+                                            NextItem:
+                                                Console.WriteLine("Next Item");
                                             }
 
                                             try

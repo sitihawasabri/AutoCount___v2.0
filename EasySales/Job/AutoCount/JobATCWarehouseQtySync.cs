@@ -160,7 +160,10 @@ namespace EasySales.Job
                             Dictionary<string, string> each = (Dictionary<string, string>)baseUom[i];
                             string product_code = each["product_code"].ToString();
                             string product_uom = each["product_uom"].ToString();
-                            uniqueKeyList.Add(product_code, product_uom);
+                            if(!uniqueKeyList.ContainsKey(product_code))
+                            {
+                                uniqueKeyList.Add(product_code, product_uom);
+                            }
                         }
                         baseUom.Clear();
 
@@ -169,7 +172,10 @@ namespace EasySales.Job
                         for (int i = 0; i < itemFromDb.Count; i++)
                         {
                             Dictionary<string, string> each = (Dictionary<string, string>)itemFromDb[i];
-                            itemList.Add(each["product_code"]);
+                            if(!itemList.Contains(each["product_code"]))
+                            {
+                                itemList.Add(each["product_code"]);
+                            }
                         }
                         itemFromDb.Clear();
 
@@ -179,7 +185,10 @@ namespace EasySales.Job
                         for (int i = 0; i < warehouseItemInMySQL.Count; i++)
                         {
                             Dictionary<string, string> each = (Dictionary<string, string>)warehouseItemInMySQL[i];
-                            warehouseItemList.Add(each["wh_code"]);
+                            if(!warehouseItemList.Contains(each["wh_code"]))
+                            {
+                                warehouseItemList.Add(each["wh_code"]);
+                            }
                         }
                         warehouseItemInMySQL.Clear();
 

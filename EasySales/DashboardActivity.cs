@@ -73,6 +73,7 @@ namespace EasySales
                     DpprMySQLconfig mysql_config = mysql_list[i];
                     _compName = mysql_config.config_database;
                     compName = _compName.ReplaceAll("", "easysale_");
+                    compName = _compName.ReplaceAll("", "easyicec_");
                     compName = compName.ToUpper();
 
                     if (compName == "GMCOMMUNICATION")
@@ -96,6 +97,7 @@ namespace EasySales
                 string _companyName = mysql_config.config_database;
                 string companyName = string.Empty;
                 companyName = _companyName.ReplaceAll("", "easysale_");
+                companyName = _companyName.ReplaceAll("", "easyicec_");
 
                 companyName = companyName.ToUpper();
 

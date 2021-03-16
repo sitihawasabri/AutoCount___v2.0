@@ -131,7 +131,11 @@ namespace EasySales.Job
                         for (int i = 0; i < custAgentFromDb.Count; i++)
                         {
                             Dictionary<string, string> each = (Dictionary<string, string>)custAgentFromDb[i];
-                            custAgentList.Add(each["cust_code"], each["salesperson_id"]);
+                            string ___custCode = each["cust_code"];
+                            if (!custAgentList.ContainsKey(___custCode))
+                            {
+                                custAgentList.Add(each["cust_code"], each["salesperson_id"]);
+                            }
                         }
                         custAgentFromDb.Clear();
                         logger.Broadcast("custAgentList : " + custAgentList.Count);

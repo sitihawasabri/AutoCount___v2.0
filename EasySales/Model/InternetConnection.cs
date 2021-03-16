@@ -71,42 +71,49 @@ namespace EasySales.Model
             Ping p = new Ping();
             int checkcount = 0;
 
-        CHECKAGAIN:
-
-            try
+            if(host != "(local)")
             {
-                checkcount++;
-                PingReply reply = p.Send(host, 500); //0.5 seconds - make sure every thing is inserted in one shot
-                Console.WriteLine(reply.Status);
-                Message(reply.Status.ToString());
-                if (reply.Status == IPStatus.Success)
+            CHECKAGAIN:
+
+                try
                 {
-                    return true;
-                }
-                else
-                {
-                    Console.WriteLine(reply.Status); //TimedOut
+                    checkcount++;
+                    PingReply reply = p.Send(host, 500); //0.5 seconds - make sure every thing is inserted in one shot
+                    Console.WriteLine(reply.Status);
                     Message(reply.Status.ToString());
+                    if (reply.Status == IPStatus.Success)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine(reply.Status); //TimedOut
+                        Message(reply.Status.ToString());
+                        Task.Delay(5000); //ping again after 5 seconds
+                        if (checkcount < 3)
+                        {
+                            goto CHECKAGAIN;
+                        }
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Message(ex.Message);
                     Task.Delay(5000); //ping again after 5 seconds
                     if (checkcount < 3)
                     {
                         goto CHECKAGAIN;
                     }
-                    return false;
                 }
+                list.Clear();
+                return result;
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine(ex.Message);
-                Message(ex.Message);
-                Task.Delay(5000); //ping again after 5 seconds
-                if (checkcount < 3)
-                {
-                    goto CHECKAGAIN;
-                }
+                return true;
             }
-            list.Clear();
-            return result;
             //return true;
         }
 

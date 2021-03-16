@@ -111,7 +111,7 @@ namespace EasySales.Job
                                 }
                             }
 
-                            string SOQuery = "SELECT o.*,DATE_FORMAT(o.order_date,'%d/%m/%Y %H:%s:%i') AS order_date_format,l.staff_code,cms_customer_branch.branch_name FROM cms_order AS o LEFT JOIN cms_customer AS c ON o.cust_id = c.cust_id LEFT JOIN cms_login AS l ON o.salesperson_id = l.login_id LEFT JOIN cms_customer_branch ON cms_customer_branch.branch_code = o.branch_code WHERE o.order_status = " + order_status + " AND cancel_status = 0 AND doc_type = 'credit' AND order_fault = 0 ";
+                            string SOQuery = "SELECT o.*,DATE_FORMAT(o.order_date,'%d/%m/%Y %H:%s:%i') AS order_date_format, CAST(o.order_udf AS CHAR(10000) CHARACTER SET utf8) AS orderUdfJson, l.staff_code,cms_customer_branch.branch_name FROM cms_order AS o LEFT JOIN cms_customer AS c ON o.cust_id = c.cust_id LEFT JOIN cms_login AS l ON o.salesperson_id = l.login_id LEFT JOIN cms_customer_branch ON cms_customer_branch.branch_code = o.branch_code WHERE o.order_status = " + order_status + " AND cancel_status = 0 AND doc_type = 'credit' AND order_fault = 0 ";
 
                             socket_OrderId = socket_OrderId.Replace("\"", "\'");
                             string socketQuery = "AND order_id IN (" + socket_OrderId + ")";
@@ -165,12 +165,26 @@ namespace EasySales.Job
                                         logger.Broadcast("Passing cust_code");
                                         string order_id = order_id_format == "<<New>>" ? order_id_format : cms_data["order_id"];
 
+                                        string orderUdf = cms_data["orderUdfJson"].ToString();
+                                        JArray remarkJArray = orderUdf.IsJArray() ? (JArray)JToken.Parse(orderUdf) : new JArray();
+                                        Console.WriteLine(remarkJArray);
+
+                                        string cnType = LogicParser.filterOrderUDFbyKey(remarkJArray, "cnType");
+
                                         doc.DocNo = order_id;
                                         doc.RefDocNo = order_id_format == "<<New>>" ? cms_data["order_id"] : "";
                                         doc.DocDate = Helper.ToDateTime(cms_data["order_date_format"]);
                                         doc.CurrencyRate = 1;
                                         doc.Description = "CREDIT NOTE";
-                                        doc.CNType = "RETURN";
+                                        if(cnType != string.Empty)
+                                        {
+                                            doc.CNType = cnType;                    //"RETURN";
+                                        }
+                                        else
+                                        {
+                                            doc.CNType = "RETURN";
+                                        }
+                                        
                                         doc.Reason = cms_data["order_delivery_note"];
                                         doc.SalesLocation = cms_data["warehouse_code"];
                                         doc.Agent = cms_data["staff_code"];

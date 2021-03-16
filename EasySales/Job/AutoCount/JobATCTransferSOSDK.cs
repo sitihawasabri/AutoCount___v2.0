@@ -416,6 +416,20 @@ namespace EasySales.Job
                                                 string normalItem = "SELECT * FROM cms_order_item WHERE order_id = '" + cms_data["order_id"] + "' AND ipad_item_id IN (" + orderItemIn + ")";
                                                 ArrayList allNormalOrderItem = mysql.Select(normalItem);
 
+                                                ArrayList getParentFOCItem = mysql.Select("SELECT product_code, parent_code FROM cms_order_item WHERE order_id = '" + cms_data["order_id"] + "' AND parent_code = 'FOC' AND cancel_status = 0");
+                                                ArrayList parentProdCodeList = new ArrayList();
+                                                for (int ix = 0; ix < getParentFOCItem.Count; ix++)
+                                                {
+                                                    Dictionary<string, string> each = (Dictionary<string, string>)getParentFOCItem[ix];
+                                                    string parentProdCode = each["product_code"];
+                                                    parentProdCodeList.Add(parentProdCode);
+                                                }
+
+                                                ArrayList focItemList = new ArrayList();
+
+
+                                                logger.Broadcast("[FOC] parentProdCodeList.Count: " + parentProdCodeList.Count);
+
                                                 if (noError && allNormalOrderItem.Count > 0)
                                                 {
                                                     logger.Broadcast("Inserting normal item");
@@ -434,6 +448,13 @@ namespace EasySales.Job
 
                                                         decimal.TryParse(item["sub_total"], out decimal sub_total);
 
+                                                        string orderItemId = item["order_item_id"];
+                                                        if (focItemList.Contains(orderItemId))
+                                                        {
+                                                            //skip FOC items - no need to insert new row
+                                                            goto NextItem;
+                                                        }
+
                                                         quantity = Math.Round(quantity, 2);
                                                         unitPrice = Math.Round(unitPrice, 2);
                                                         discountAmount = Math.Round(discountAmount, 2);
@@ -442,7 +463,8 @@ namespace EasySales.Job
                                                         string discount = discountAmount + "%";
 
                                                         addOrderDetail = addSalesOrder.AddDetail();
-                                                        addOrderDetail.ItemCode = item["product_code"];
+                                                        string itemCode = item["product_code"];
+                                                        addOrderDetail.ItemCode = itemCode;
                                                         string salespersonRemark = item["salesperson_remark"];
                                                         string furtherDescription = FormatAsRTF(salespersonRemark);
                                                         //Console.WriteLine(furtherDescription);
@@ -455,6 +477,32 @@ namespace EasySales.Job
                                                         addOrderDetail.SubTotal = sub_total;
                                                         addOrderDetail.Location = LOCATION;
                                                         addOrderDetail.DiscountAmt = discountAmount;
+
+                                                        if (parentProdCodeList.Contains(itemCode))
+                                                        {
+                                                            //get FOC item
+                                                            ArrayList getFOC = mysql.Select("SELECT order_item_id, product_code, quantity FROM cms_order_item WHERE order_id = '" + cms_data["order_id"] + "' AND parent_code = '" + itemCode + "' AND cancel_status = 0");
+
+                                                            for (int ixx = 0; ixx < getFOC.Count; ixx++)
+                                                            {
+                                                                Dictionary<string, string> each = (Dictionary<string, string>)getFOC[ixx];
+                                                                string qty = each["quantity"];
+                                                                string product_code = each["product_code"];
+                                                                string order_item_id = each["order_item_id"];
+
+                                                                if (product_code == itemCode)
+                                                                {
+                                                                    logger.Broadcast("[" + product_code + "] FOC qty ===> " + qty);
+                                                                    decimal.TryParse(qty, out decimal __qty);
+                                                                    addOrderDetail.FOCQty = __qty;
+
+                                                                    focItemList.Add(order_item_id);
+                                                                }
+                                                            }
+                                                        }
+
+                                                    NextItem:
+                                                        Console.WriteLine("Next Item");
                                                     }
                                                 }
 

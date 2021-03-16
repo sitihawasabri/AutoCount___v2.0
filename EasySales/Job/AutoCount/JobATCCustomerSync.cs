@@ -83,7 +83,7 @@ namespace EasySales.Job
                                     var mssql_rules = key.mssql;
                                     foreach (var db in mssql_rules)
                                     {
-                                        string query = "SELECT AccNo, CompanyName, Attention, EmailAddress, Phone1, Fax1, Address1, Address2, Address3, Address4, PostCode, DeliverAddr1, DeliverAddr2, DeliverAddr3, DeliverAddr4, DisplayTerm, PriceCategory, IsActive from dbo.Debtor order by AccNo";
+                                        string query = "SELECT AccNo, CreditLimit, CompanyName, Attention, EmailAddress, Phone1, Fax1, Address1, Address2, Address3, Address4, PostCode, DeliverAddr1, DeliverAddr2, DeliverAddr3, DeliverAddr4, DisplayTerm, PriceCategory, IsActive from dbo.Debtor order by AccNo";
 
                                         string ts_join = string.Empty;
                                         string ts_join_query = string.Empty;
@@ -136,6 +136,22 @@ namespace EasySales.Job
                             throw new Exception("ATC Customer sync requires backend rules");
                         }
 
+                        ArrayList getActiveCustomers = mysql.Select("SELECT cust_code FROM cms_customer WHERE customer_status = 1");
+                        ArrayList activeCustCode = new ArrayList();
+                        for(int i = 0; i < getActiveCustomers.Count; i++)
+                        {
+                            Dictionary<string, string> each = (Dictionary<string, string>)getActiveCustomers[i];
+                            string custCode = each["cust_code"];
+                            mysql.Message("cust code: " + custCode);
+
+                            if(!activeCustCode.Contains(custCode))
+                            {
+                                activeCustCode.Add(custCode);
+                            }
+                        }
+                        getActiveCustomers.Clear();
+                        logger.Broadcast("Active Cust Code in DB: " + activeCustCode.Count);
+
                         mssql_rule.Iterate<ATCRule>((database, idx) =>
                         {
                             SQLServer mssql = new SQLServer();
@@ -147,7 +163,10 @@ namespace EasySales.Job
                             for (int i = 0; i < outstandingFromDb.Count; i++)
                             {
                                 Dictionary<string, string> each = (Dictionary<string, string>)outstandingFromDb[i];
-                                outstandingList.Add(each["DebtorCode"], each["Outstanding"]);
+                                if(!outstandingList.ContainsKey(each["DebtorCode"]))
+                                {
+                                    outstandingList.Add(each["DebtorCode"], each["Outstanding"]);
+                                }
                             }
                             outstandingFromDb.Clear();
 
@@ -249,6 +268,37 @@ namespace EasySales.Job
                                         });
 
                                         row += inIdx == 0 ? "('" + status + "" : "','" + status;
+
+                                        NoMssqlField = false;
+                                        addedToRow = true;
+                                    }
+                                    
+                                    if (corr_mysql_field == "cust_code")
+                                    {
+                                        string AccNo = string.Empty;
+
+                                        map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
+                                        {
+                                            if (mssql_fields.Key == "AccNo")
+                                            {
+                                                AccNo = mssql_fields.Value;
+
+                                                mssql.Message("Acc No: " + AccNo);
+                                                if (activeCustCode.Contains(AccNo))
+                                                {
+                                                    int indexx = activeCustCode.IndexOf(AccNo);
+                                                    if (indexx != -1)
+                                                    {
+                                                        mysql.Message("Remove Cust Code ===> " + AccNo);
+                                                        activeCustCode.RemoveAt(indexx);
+                                                        mysql.Message("After remove activeCustCode ======>" + activeCustCode.Count);
+                                                    }
+                                                }
+
+                                            }
+                                        });
+
+                                        row += inIdx == 0 ? "('" + AccNo + "" : "','" + AccNo;
 
                                         NoMssqlField = false;
                                         addedToRow = true;
@@ -388,6 +438,33 @@ namespace EasySales.Job
                                 logger.message = string.Format("{0} customer records is inserted into " + mysqlconfig.config_database, RecordCount);
                                 logger.Broadcast();
                             }
+
+                            if(activeCustCode.Count > 0)
+                            {
+                                //for blue martin it keeps deactivating those cust code which returned from mssql -.-
+                                logger.Broadcast("Total customer records to be deactivated: " + activeCustCode.Count);
+
+                                HashSet<string> deactivateId = new HashSet<string>();
+                                for (int i = 0; i < activeCustCode.Count; i++)
+                                {
+                                    string _id = activeCustCode[i].ToString();
+                                    if(deactivateId.Contains(_id))
+                                    {
+                                        deactivateId.Add(_id);
+                                    }
+                                }
+
+                                string ToBeDeactivate = "'" + string.Join("','", deactivateId) + "'";
+                                mysql.Message("DEACTIVATE CUSTOMER: " + ToBeDeactivate);
+
+                                string inactive = "UPDATE cms_customer SET customer_status = 0 WHERE cust_code IN (" + ToBeDeactivate + ")";
+                                mysql.Insert(inactive);
+                                mysql.Message("DEACTIVATE CUSTOMER QUERY ======> " + inactive);
+
+                                logger.Broadcast(activeCustCode.Count + " customer records deactivated");
+                                activeCustCode.Clear();
+                            }
+
                             RecordCount = 0; /* reset count for the next db */
                             mysqlFieldList.Clear();
                             queryResult.Clear();
