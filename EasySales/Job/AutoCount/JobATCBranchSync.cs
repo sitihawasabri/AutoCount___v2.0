@@ -126,6 +126,9 @@ namespace EasySales.Job
                                         };
 
                                         mssql_rule.Add(ATC_rule);
+
+                                        include.Clear();
+                                        exclude.Clear();
                                     }
                                 }
                             }
@@ -155,15 +158,16 @@ namespace EasySales.Job
                         }
                         customerFromDb.Clear();
 
-                        //Console.WriteLine("customerList.Count: " + customerList.Count);
-
                         mssql_rule.Iterate<ATCRule>((database, idx) =>
                         {
                             SQLServer mssql = new SQLServer();
                             mssql.Connect(dbname: database.DBname);
 
                             ArrayList queryResult = mssql.Select(database.Query);
-                            //Console.WriteLine(database.Query);
+                            if(queryResult.Count > 0)
+                            {
+                                logger.Broadcast("Branch to be inserted: " + queryResult.Count);
+                            }
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -391,15 +395,12 @@ namespace EasySales.Job
                         });
                         mssql_rule.Clear();
 
-                        if (cms_updated_time.Count > 0)
-                        {
-                            mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_customer_branch'");
-                        }
-                        else
-                        {
-                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_customer_branch', NOW())");
-                        }
+                        mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_customer_branch', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
+
                         cms_updated_time.Clear();
+
+                        customerList.Clear();
+                        salespersonList.Clear();
                     });
 
                     mysql_list.Clear();

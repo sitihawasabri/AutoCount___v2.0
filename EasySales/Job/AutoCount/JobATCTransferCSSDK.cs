@@ -126,8 +126,6 @@ namespace EasySales.Job
                             ArrayList queryResult = mysql.Select(SOQuery);
                             mysql.Message(SOQuery);
 
-                            logger.Broadcast("Total CS to be transferred: " + queryResult.Count);
-
                             ATChandler autoCount = new ATChandler(isATCv2);
                             logger.Broadcast("Getting User Session -> " + (AutoCountV2.TriggerConnection() == true).ToString());
                             this.connection = autoCount.PerformAuth();
@@ -140,6 +138,8 @@ namespace EasySales.Job
                             }
                             else
                             {
+                                logger.Broadcast("Total CS to be transferred: " + queryResult.Count);
+
                                 if (autoCount.PerformAuthInAutoCount())
                                 {
                                     logger.Broadcast("Login with AutoCount is successful");
@@ -221,7 +221,10 @@ namespace EasySales.Job
 
                                                 if (discountAmount > 0)
                                                 {
-                                                    discountAmount = discountAmount / (unitPrice * quantity) * 100;
+                                                    if(unitPrice != 0 && quantity != 0)
+                                                    {
+                                                        discountAmount = discountAmount / (unitPrice * quantity) * 100;
+                                                    }
                                                 }
 
                                                 decimal.TryParse(item["sub_total"], out decimal sub_total);
@@ -231,6 +234,7 @@ namespace EasySales.Job
                                                 quantity = Math.Round(quantity, 2);
                                                 unitPrice = Math.Round(unitPrice, 2);
                                                 discountAmount = Math.Round(discountAmount, 2);
+                                                logger.Broadcast("Discount ===> " + discountAmount);
                                                 sub_total = Math.Round(sub_total, 2);
 
                                                 string discount = discountAmount + "%";
@@ -321,16 +325,16 @@ namespace EasySales.Job
                                             if (isATCv2)
                                             {
                                                 logger.Broadcast("insert atcv2 payment here");
-                                                logger.Broadcast("commented bcs 2 dlls files");
-                                                //ARPaymentDTLEntity payDtl = addCashDoc.CashSalePayment.ARPayment.NewDetail();
-                                                ////AutoCount.ARAP.ARPayment.ARPaymentDTLEntity payDtl = addCashDoc.CashSalePayment.ARPayment.NewDetail();
-                                                //payDtl.PaymentMethod = "CASH";
-                                                //payDtl.PaymentAmt = paymentAmount;
+                                                //logger.Broadcast("commented bcs 2 dlls files");
+                                                ARPaymentDTLEntity payDtl = addCashDoc.CashSalePayment.ARPayment.NewDetail();
+                                                //AutoCount.ARAP.ARPayment.ARPaymentDTLEntity payDtl = addCashDoc.CashSalePayment.ARPayment.NewDetail();
+                                                payDtl.PaymentMethod = "CASH";
+                                                payDtl.PaymentAmt = paymentAmount;
 
-                                                //if (addCashDoc.CashSalePayment.PaymentAmt > 0)
-                                                //{
-                                                //    addCashDoc.ReferPaymentDocKey = addCashDoc.CashSalePayment.DocKey;
-                                                //}
+                                                if (addCashDoc.CashSalePayment.PaymentAmt > 0)
+                                                {
+                                                    addCashDoc.ReferPaymentDocKey = addCashDoc.CashSalePayment.DocKey;
+                                                }
                                             }
                                             else
                                             {
@@ -375,17 +379,28 @@ namespace EasySales.Job
                                                 {
                                                     mysql.Insert(wh_stk_adj[ixx].ToString());
                                                 }
-
-                                                new JobATCStockCardSync().ExecuteSyncTodayOnly("1");
-
                                             }
                                             catch (Exception ex)
                                             {
                                                 logger.Broadcast("Transfer CS catch: " + ex.Message);
                                                 autoCount.Message("Transfer CS catch: " + ex.Message);
+
+                                                string str = ex.Message;
+                                                Database.Sanitize(ref str);
+                                                if(str.Contains("already exist"))
+                                                {
+                                                    int.TryParse(order_status, out int int_order_status);
+                                                    int updateOrderStatus = int_order_status + 1;
+                                                    mysql.Insert("UPDATE cms_order SET order_status = '"+ updateOrderStatus + "' WHERE order_id = '" + cash_id + "'");
+                                                }
+                                                else
+                                                {
+                                                    mysql.Insert("UPDATE cms_order SET order_fault_message = '" + str + "' WHERE order_id = '" + cash_id + "'");
+                                                }
                                             }
                                         }
                                     }
+                                    new JobATCStockCardSync().ExecuteSyncTodayOnly("1");
                                 }
                             }
                         }

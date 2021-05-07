@@ -1856,7 +1856,7 @@ namespace EasySales
                 if(cb_sdk_atc.Checked)
                 {
                     //new JobATCReadyStock().Execute();
-                    new JobATCStockCardSync().Execute();
+                    //new JobATCStockCardSync().Execute();
                 }
             }
             else if (accSoftware.software_name == "Sage UBS")

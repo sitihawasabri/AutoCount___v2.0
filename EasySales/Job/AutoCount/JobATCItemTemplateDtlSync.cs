@@ -65,7 +65,7 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("cms_package_dtl_atc");
 
-                        Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_package_dtl");
+                        //Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_package_dtl");
 
                         ArrayList mssql_rule = new ArrayList();
 
@@ -75,7 +75,7 @@ namespace EasySales.Job
                             {
                                 if (key.mssql != null && key.mssql.GetType().ToString() == "Newtonsoft.Json.Linq.JArray")
                                 {
-                                    string query = "SELECT PackageDTL.UOM,PackageDTL.DocKey,ItemCode,PackageDTL.Description,PackageDTL.FurtherDescription,PackageDTL.Qty,PackageDTL.UnitPrice, Package.PackageCode as packcode FROM dbo.PackageDTL left join dbo.package on PackageDTL.DocKey=package.DocKey";
+                                    string query = "SELECT PackageDTL.UOM, PackageDTL.DocKey, ItemCode, PackageDTL.Description, PackageDTL.FurtherDescription, PackageDTL.Qty,PackageDTL.UnitPrice, Package.PackageCode as packcode FROM dbo.PackageDTL left join dbo.package on PackageDTL.DocKey=package.DocKey";
 
                                     var mssql_rules = key.mssql;
                                     foreach (var db in mssql_rules)
@@ -135,6 +135,10 @@ namespace EasySales.Job
                             //Console.WriteLine(database.Query);
 
                             ArrayList queryResult = mssql.Select(database.Query);
+                            if (queryResult.Count > 0)
+                            {
+                                logger.Broadcast("Item Template Details to be inserted: " + queryResult.Count);
+                            }
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -210,6 +214,7 @@ namespace EasySales.Job
                                                     RichTextBox rtBox = new RichTextBox();
                                                     rtBox.Rtf = value;
                                                     desc = rtBox.Text;
+                                                    rtBox.Dispose();
                                                     //Console.WriteLine("--->" + desc);
                                                 }
                                             }
@@ -280,7 +285,7 @@ namespace EasySales.Job
                                     insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                     mysql.Insert(insertQuery);
-                                    mysql.Message(insertQuery);
+                                    mysql.Message("Item Template Details ====> " + insertQuery);
 
                                     insertQuery = insertQuery.ReplaceAll("@values", values);
                                     valueString.Clear();
@@ -298,7 +303,7 @@ namespace EasySales.Job
                                 insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                 mysql.Insert(insertQuery);
-                                mysql.Message(insertQuery);
+                                mysql.Message("Item Template Details ====> " + insertQuery);
 
                                 insertQuery = insertQuery.ReplaceAll("@values", values);
                                 valueString.Clear();
@@ -306,22 +311,15 @@ namespace EasySales.Job
                                 logger.message = string.Format("{0} item template details records is inserted into " + mysqlconfig.config_database, RecordCount);
                                 logger.Broadcast();
                             }
-
-                            if (cms_updated_time.Count > 0)
-                            {
-                                mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_package_dtl'");
-                            }
-                            else
-                            {
-                                mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_package_dtl', NOW())");
-                            }
+                            
+                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_package_dtl', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
                             RecordCount = 0; /* reset count for the next database */
                             mysqlFieldList.Clear();
                             queryResult.Clear();
                         });
                         mssql_rule.Clear();
-                        cms_updated_time.Clear();
+                        //cms_updated_time.Clear();
                     });
 
                     mysql_list.Clear();

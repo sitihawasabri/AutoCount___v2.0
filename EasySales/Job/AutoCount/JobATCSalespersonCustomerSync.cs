@@ -52,6 +52,7 @@ namespace EasySales.Job
 
                     DateTime startTime = DateTime.Now;
 
+                    LocalDB.DBCleanup();
                     LocalDB.InsertSyncLog(slog);
 
                     logger.message = "ATC customer-agent sync is running";
@@ -69,7 +70,7 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("cms_customer_salesperson_atc");
 
-                        Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_customer_salesperson");
+                        //Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_customer_salesperson");
 
                         ArrayList mssql_rule = new ArrayList();
 
@@ -160,7 +161,6 @@ namespace EasySales.Job
                             }
                         }
                         customerFromDb.Clear();
-                        //Console.WriteLine("customerList.Count: " + customerList.Count);
 
                         string getCustAgent = "SELECT salesperson_customer_id, salesperson_id, customer_id FROM cms_customer_salesperson WHERE active_status = 1 ";
                         Console.WriteLine("getCustAgentQuery: " + getCustAgent);
@@ -185,6 +185,10 @@ namespace EasySales.Job
                             mssql.Connect(dbname: database.DBname);
 
                             ArrayList queryResult = mssql.Select(database.Query);
+                            if (queryResult.Count > 0)
+                            {
+                                logger.Broadcast("Cust-Agent to be inserted: " + queryResult.Count);
+                            }
                             mssql.Message("Cust-Agent MSSQL Query ===> " + database.Query);
 
                             string mysql_insert = string.Empty;
@@ -363,20 +367,18 @@ namespace EasySales.Job
 
                                 custAgentList.Clear();
                             }
+                            
+                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_customer_salesperson', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
-                            if (cms_updated_time.Count > 0)
-                            {
-                                mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_customer_salesperson'");
-                            }
-                            else
-                            {
-                                mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_customer_salesperson', NOW())");
-                            }
+                            salespersonList.Clear();
+                            customerList.Clear();
+                            custAgentList.Clear();
+
                             mysqlFieldList.Clear();
                             queryResult.Clear();
                         });
                         mssql_rule.Clear();
-                        cms_updated_time.Clear();
+                        //cms_updated_time.Clear();
                     });
 
                     mysql_list.Clear();

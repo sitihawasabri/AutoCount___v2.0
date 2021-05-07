@@ -61,7 +61,7 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("cms_customer_ageing_ko_inv_atc");
 
-                        Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_customer_ageing_ko_inv_atc");
+                       // Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_customer_ageing_ko_inv_atc");
 
                         ArrayList mssql_rule = new ArrayList();
 
@@ -134,6 +134,10 @@ namespace EasySales.Job
                             //Console.WriteLine(database.Query);
 
                             ArrayList queryResult = mssql.Select(database.Query);
+                            if (queryResult.Count > 0)
+                            {
+                                logger.Broadcast("INV-KO to be inserted: " + queryResult.Count);
+                            }
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -277,7 +281,7 @@ namespace EasySales.Job
                                     insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                     mysql.Insert(insertQuery);
-                                    mysql.Message(insertQuery);
+                                    mysql.Message("INVKO QUERY ===> " + insertQuery);
 
                                     insertQuery = insertQuery.ReplaceAll("@values", values);
                                     valueString.Clear();
@@ -296,7 +300,7 @@ namespace EasySales.Job
                                 insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                 mysql.Insert(insertQuery);
-                                mysql.Message(insertQuery);
+                                mysql.Message("INVKO QUERY ===> " + insertQuery);
 
                                 insertQuery = insertQuery.ReplaceAll("@values", values);
                                 valueString.Clear();
@@ -304,22 +308,15 @@ namespace EasySales.Job
                                 logger.message = string.Format("{0} Aging KO Invoice records is inserted into " + mysqlconfig.config_database, RecordCount);
                                 logger.Broadcast();
                             }
-
-                            if (cms_updated_time.Count > 0)
-                            {
-                                mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_customer_ageing_ko_or'");
-                            }
-                            else
-                            {
-                                mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_customer_ageing_ko_or', NOW())");
-                            }
+                            
+                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_customer_ageing_ko_or', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
                             RecordCount = 0; /* reset count */
                             mysqlFieldList.Clear();
                             queryResult.Clear();
                         });
                         mssql_rule.Clear(); 
-                        cms_updated_time.Clear();
+                        //cms_updated_time.Clear();
                     });
 
                     mysql_list.Clear();

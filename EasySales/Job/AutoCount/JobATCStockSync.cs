@@ -53,6 +53,7 @@ namespace EasySales.Job
 
                     DateTime startTime = DateTime.Now;
 
+                    LocalDB.DBCleanup();
                     LocalDB.InsertSyncLog(slog);
 
                     logger.message = "ATC stock sync is running";
@@ -70,7 +71,7 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("cms_product_atc");
 
-                        Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_product");
+                        //Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_product");
 
                         ArrayList mssql_rule = new ArrayList();
 
@@ -83,16 +84,9 @@ namespace EasySales.Job
                             {
                                 if (key.mssql != null && key.mssql.GetType().ToString() == "Newtonsoft.Json.Linq.JArray")
                                 {
-                                    //string query = "SELECT dbo.Item.ItemCode, MAX(CAST(FurtherDescription AS VARCHAR(MAX))) AS FurtherDescription,Description, DESC2,IsActive,SUM(BalQty) as BalQty, ItemGroup,ItemType from dbo.Item left join dbo.ItemBalQty on dbo.Item.ItemCode = dbo.ItemBalQty.ItemCode group by dbo.Item.ItemCode, Description,DESC2,IsActive,ItemGroup,ItemType";
-
                                     string query = "SELECT dbo.Item.ItemCode, dbo.ItemUOM.BarCode, MAX(CAST(FurtherDescription AS VARCHAR(MAX))) AS FurtherDescription,Description, DESC2,IsActive,SUM(BalQty) as BalQty, ItemGroup,ItemType from dbo.Item @leftjoinquery left join dbo.ItemUOM on dbo.ItemUOM.ItemCode = dbo.Item.ItemCode group by dbo.Item.ItemCode, Description,DESC2,IsActive,ItemGroup,ItemType, dbo.ItemUOM.BarCode ";
                                     //left join dbo.ItemUOM on dbo.ItemUOM.ItemCode = dbo.Item.ItemCode
                                     //@leftjoinquery = left join dbo.ItemBalQty on dbo.Item.ItemCode = dbo.ItemBalQty.ItemCode || left join dbo.ItemBatchBalQty on dbo.Item.ItemCode = dbo.ItemBatchBalQty.ItemCode
-
-                                    if (cms_updated_time.Count > 0)
-                                    {
-                                        string updated_at = cms_updated_time["updated_at"].ToString().MSSQLdate();
-                                    }
 
                                     var mssql_rules = key.mssql;
                                     foreach (var db in mssql_rules)
@@ -170,6 +164,15 @@ namespace EasySales.Job
                         }
                         categoriesInMySQL.Clear();
 
+                        ArrayList productsInMySQL = mysql.Select("SELECT product_code FROM cms_product WHERE product_status = 1");
+                        ArrayList activeProducts = new ArrayList();
+                        for (int i = 0; i < productsInMySQL.Count; i++)
+                        {
+                            Dictionary<string, string> map = (Dictionary<string, string>)productsInMySQL[i];
+                            activeProducts.Add(map["product_code"]);
+                        }
+                        productsInMySQL.Clear();
+
                         mssql_rule.Iterate<ATCRule>((database, idx) =>
                         {
                             SQLServer mssql = new SQLServer();
@@ -178,6 +181,10 @@ namespace EasySales.Job
                             logger.Broadcast(database.Query);
 
                             ArrayList queryResult = mssql.Select(database.Query);
+                            if (queryResult.Count > 0)
+                            {
+                                logger.Broadcast("Products to be inserted: " + queryResult.Count);
+                            }
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -316,6 +323,7 @@ namespace EasySales.Job
                                                 RichTextBox rtBox = new RichTextBox();
                                                 rtBox.Rtf = desc;
                                                 FurDesc = rtBox.Text;
+                                                rtBox.Dispose();
                                             }
                                         });
 
@@ -330,6 +338,33 @@ namespace EasySales.Job
                                     {
                                         RecordCount++;
                                         row += inIdx == 0 ? "('" + RecordCount + "" : "','" + RecordCount;
+
+                                        NoMssqlField = false;
+                                        addedToRow = true;
+                                    }
+
+                                    if (corr_mysql_field == "product_code")
+                                    {
+                                        string productCode = string.Empty;
+
+                                        map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
+                                        {
+                                            if (mssql_fields.Key == "ItemCode")
+                                            {
+                                                productCode = mssql_fields.Value;
+                                            }
+                                        });
+
+                                        row += inIdx == 0 ? "('" + productCode + "" : "','" + productCode;
+
+                                        if (activeProducts.Contains(productCode))
+                                        {
+                                            int indexx = activeProducts.IndexOf(productCode);
+                                            if (indexx != -1)
+                                            {
+                                                activeProducts.RemoveAt(indexx);
+                                            }
+                                        }
 
                                         NoMssqlField = false;
                                         addedToRow = true;
@@ -401,8 +436,6 @@ namespace EasySales.Job
                                 }
                             });
 
-
-
                             if (valueString.Count > 0)
                             {
                                 string values = valueString.Join(",");
@@ -419,21 +452,40 @@ namespace EasySales.Job
                                 logger.Broadcast();
                             }
 
-                            if (cms_updated_time.Count > 0)
+                            if (activeProducts.Count > 0)
                             {
-                                mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_product'");
+                                logger.Broadcast("Total product records to be deactivated: " + activeProducts.Count);
+
+                                HashSet<string> deactivateId = new HashSet<string>();
+                                for (int i = 0; i < activeProducts.Count; i++)
+                                {
+                                    string _id = activeProducts[i].ToString();
+                                    deactivateId.Add(_id);
+                                }
+
+                                string ToBeDeactivate = "'" + string.Join("','", deactivateId) + "'";
+                                Console.WriteLine(ToBeDeactivate);
+
+                                string inactive = "UPDATE cms_product SET product_status = 0 WHERE product_code IN (" + ToBeDeactivate + ")";
+                                mysql.Insert(inactive);
+
+                                logger.Broadcast(activeProducts.Count + " product records deactivated");
+
+                                activeProducts.Clear();
+                                deactivateId.Clear();
                             }
-                            else
-                            {
-                                mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_product', NOW())");
-                            }
+
+                            categories.Clear();
+                            activeProducts.Clear();
+
+                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_product', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
                             RecordCount = 0; /* reset count for the next database */
                             mysqlFieldList.Clear();
                             queryResult.Clear();
                         });
                         mssql_rule.Clear();
-                        cms_updated_time.Clear();
+                        //cms_updated_time.Clear();
                     });
 
                     mysql_list.Clear();

@@ -1104,23 +1104,46 @@ namespace EasySales.Model
                     {
                         if (ATCSDKEnabled)
                         {
-                            IJobDetail atctransfersosdkjob = JobBuilder.Create<JobATCTransferSOSDK>()
+                            if(ATCV2Enabled)
+                            {
+                                IJobDetail atctransfersosdkjob = JobBuilder.Create<JobATCTransferSOSDKv2>()
                         .WithIdentity(Constants.Job_ATCTransferSOSDK, Constants.Job_Group_Transfer)
                         .Build();
 
-                            ITrigger atctransfersosdktrigger = TriggerBuilder.Create()
-                              .WithIdentity(Constants.Trigger_ATCTransferSOSDK, Constants.Job_Group_Transfer)
-                              .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(SalesOrdersInterval)))
-                              .WithSimpleSchedule(x => x
-                                  .WithIntervalInSeconds(GetSecondsFromMinute(SalesOrdersInterval))
-                                  .RepeatForever())
-                              .Build();
+                                ITrigger atctransfersosdktrigger = TriggerBuilder.Create()
+                                  .WithIdentity(Constants.Trigger_ATCTransferSOSDK, Constants.Job_Group_Transfer)
+                                  .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(SalesOrdersInterval)))
+                                  .WithSimpleSchedule(x => x
+                                      .WithIntervalInSeconds(GetSecondsFromMinute(SalesOrdersInterval))
+                                      .RepeatForever())
+                                  .Build();
 
-                            logger.message = string.Format("[SDK] ATC transfer SO trigger is set with interval of {0} min", SalesOrdersInterval);
-                            logger.Broadcast();
+                                logger.message = string.Format("[SDK] ATC transfer SO v2.0 trigger is set with interval of {0} min", SalesOrdersInterval);
+                                logger.Broadcast();
 
-                            await scheduler.ScheduleJob(atctransfersosdkjob, atctransfersosdktrigger);
-                            ActiveJobs++;
+                                await scheduler.ScheduleJob(atctransfersosdkjob, atctransfersosdktrigger);
+                                ActiveJobs++;
+                            }
+                            else
+                            {
+                                IJobDetail atctransfersosdkjob = JobBuilder.Create<JobATCTransferSOSDK>()
+                        .WithIdentity(Constants.Job_ATCTransferSOSDK, Constants.Job_Group_Transfer)
+                        .Build();
+
+                                ITrigger atctransfersosdktrigger = TriggerBuilder.Create()
+                                  .WithIdentity(Constants.Trigger_ATCTransferSOSDK, Constants.Job_Group_Transfer)
+                                  .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(SalesOrdersInterval)))
+                                  .WithSimpleSchedule(x => x
+                                      .WithIntervalInSeconds(GetSecondsFromMinute(SalesOrdersInterval))
+                                      .RepeatForever())
+                                  .Build();
+
+                                logger.message = string.Format("[SDK] ATC transfer SO trigger is set with interval of {0} min", SalesOrdersInterval);
+                                logger.Broadcast();
+
+                                await scheduler.ScheduleJob(atctransfersosdkjob, atctransfersosdktrigger);
+                                ActiveJobs++;
+                            }
                         }
                         else
                         {
@@ -1795,25 +1818,24 @@ namespace EasySales.Model
                         //    logger.message = string.Format("ATC Ready Stock (SDK) trigger is set with interval of {0} min", StockInterval);
                         //    logger.Broadcast();
 
-                            IJobDetail atcstockcardjob = JobBuilder.Create<JobATCStockCardSync>()                                       /* ATC */
-                        .WithIdentity(Constants.Job_ATCStockCardSync, Constants.Job_Group_Sync)
-                        .Build();
+                        //    IJobDetail atcstockcardjob = JobBuilder.Create<JobATCStockCardSync>()                                       /* ATC */
+                        //.WithIdentity(Constants.Job_ATCStockCardSync, Constants.Job_Group_Sync)
+                        //.Build();
 
-                            ITrigger atcstockcardtrigger = TriggerBuilder.Create()
-                                .WithIdentity(Constants.Trigger_ATCStockCardSync, Constants.Job_Group_Sync)
-                                .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(StockInterval)))
-                                .WithSimpleSchedule(x => x
-                                    .WithIntervalInSeconds(GetSecondsFromMinute(StockInterval))
-                                    .RepeatForever())
-                                .Build();
+                        //    ITrigger atcstockcardtrigger = TriggerBuilder.Create()
+                        //        .WithIdentity(Constants.Trigger_ATCStockCardSync, Constants.Job_Group_Sync)
+                        //        .StartAt(dtNow.AddSeconds(GetSecondsFromMinute(StockInterval)))
+                        //        .WithSimpleSchedule(x => x
+                        //            .WithIntervalInSeconds(GetSecondsFromMinute(StockInterval))
+                        //            .RepeatForever())
+                        //        .Build();
 
-                            logger.message = string.Format("ATC stock card (SDK) trigger is set with interval of {0} min", StockInterval);
-                            logger.Broadcast();
+                        //    logger.message = string.Format("ATC stock card (SDK) trigger is set with interval of {0} min", StockInterval);
+                        //    logger.Broadcast();
 
-                            //await scheduler.ScheduleJob(atcreadystockjob, atcreadystocktrigger);
-                            await scheduler.ScheduleJob(atcstockcardjob, atcstockcardtrigger);
-                            ActiveJobs++;
-                            ActiveJobs++;
+                        //    //await scheduler.ScheduleJob(atcreadystockjob, atcreadystocktrigger);
+                        //    await scheduler.ScheduleJob(atcstockcardjob, atcstockcardtrigger);
+                        //    ActiveJobs++;
                         }
                     }
                     else if (accSoftware.software_name == "Sage UBS")                               //####LATER CHANGE TO UBS JOB

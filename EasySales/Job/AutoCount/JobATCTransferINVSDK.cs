@@ -312,17 +312,31 @@ namespace EasySales.Job
                                                 {
                                                     mysql.Insert(wh_stk_adj[ixx].ToString());
                                                 }
-                                                new JobATCStockCardSync().ExecuteSyncTodayOnly("1"); 
+                                               
                                                 new JobATCWarehouseQtySync().ExecuteOnlyItem(onlyItemToSync);
                                             }
                                             catch(AutoCount.AppException ex)
                                             {
                                                 logger.Broadcast("Transfer INV catch: " + ex.Message);
                                                 autoCount.Message("Transfer INV catch: " + ex.Message);
-                                                AutoCount.AppMessage.ShowMessage(ex.Message);
+
+                                                string str = ex.Message;
+                                                Database.Sanitize(ref str);
+                                                if (str.Contains("already exist"))
+                                                {
+                                                    int.TryParse(order_status, out int int_order_status);
+                                                    int updateOrderStatus = int_order_status + 1;
+                                                    mysql.Insert("UPDATE cms_order SET order_status = '" + updateOrderStatus + "' WHERE order_id = '" + cash_id + "'");
+                                                }
+                                                else
+                                                {
+                                                    mysql.Insert("UPDATE cms_order SET order_fault_message = '" + str + "' WHERE order_id = '" + inv_id + "'");
+                                                    //AutoCount.AppMessage.ShowMessage(ex.Message);
+                                                }
                                             }
                                         }
                                     }
+                                    new JobATCStockCardSync().ExecuteSyncTodayOnly("1");
                                 }
                             }
                         }

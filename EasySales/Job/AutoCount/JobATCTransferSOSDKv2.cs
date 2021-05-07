@@ -99,7 +99,6 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("transfer_so_atc");
 
-                        ArrayList mssql_rule = new ArrayList();
                         if (jsonRule.Count > 0)
                         {
                             foreach (var key in jsonRule)
@@ -126,8 +125,8 @@ namespace EasySales.Job
 
                             //logger.Broadcast("Getting User Session -> " + (AutoCountV2.TriggerConnection() == true).ToString());
                             this.connection = autoCount.PerformAuth();
-
-                            string SOQuery = "SELECT cms_order.*,DATE_FORMAT(cms_order.order_date, '%d/%m/%Y %H:%s:%i') AS order_date_format, cms_login.staff_code FROM cms_order LEFT JOIN cms_login ON cms_order.salesperson_id = cms_login.login_id WHERE order_status = " + order_status + " AND cancel_status = 0 AND doc_type = 'sales' AND order_fault = 0 ";
+                            
+                            string SOQuery = "SELECT cms_order.*,DATE_FORMAT(cms_order.order_date, '%d/%m/%Y %H:%s:%i') AS order_date_format,DATE_FORMAT(cms_order.delivery_date, '%d/%m/%Y %H:%s:%i') AS deli_date_format, cms_login.staff_code FROM cms_order LEFT JOIN cms_login ON cms_order.salesperson_id = cms_login.login_id WHERE order_status = " + order_status + " AND cancel_status = 0 AND doc_type = 'sales' AND order_fault = 0 ";
                             //order_id = "\"SO-SS-001\",\"SO-SS-003\",\"SO-SS-002\"";
                             socket_OrderId = socket_OrderId.Replace("\"", "\'");
                             string socketQuery = "AND order_id IN (" + socket_OrderId + ")";
@@ -138,6 +137,9 @@ namespace EasySales.Job
                             mysql.Message(SOQuery);
 
                             logger.Broadcast("Total orders to be transferred: " + queryResult.Count);
+
+                            SQLServer mssql = new SQLServer();
+                            mssql.Connect(targetDBname);
 
                             if (queryResult.Count == 0)
                             {
@@ -154,6 +156,7 @@ namespace EasySales.Job
 
                                     for (int i = 0; i < queryResult.Count; i++)
                                     {
+                                        int fault = 0;
                                         string orderId = string.Empty;
 
                                         Dictionary<string, string> cms_data = (Dictionary<string, string>)queryResult[i];
@@ -184,7 +187,6 @@ namespace EasySales.Job
                                             addSalesOrder.InvAddr2 = cms_data["billing_address2"];
                                             addSalesOrder.InvAddr3 = cms_data["billing_address3"];
                                             addSalesOrder.InvAddr4 = cms_data["billing_address4"];
-
                                             addSalesOrder.Phone1 = cms_data["cust_tel"];
                                             addSalesOrder.Fax1 = cms_data["cust_fax"];
 
@@ -197,7 +199,20 @@ namespace EasySales.Job
                                             addSalesOrder.DeliverContact = cms_data["cust_fax"];
                                             addSalesOrder.SalesLocation = LOCATION;
                                             addSalesOrder.Ref = cms_data["cust_reference"];
-
+                                            //string order_delivery_note = cms_data["order_delivery_note"];
+                                            //int noteLength = order_delivery_note.Length;
+                                            //if(noteLength > 40)
+                                            //{
+                                            //    //insert some where else
+                                            //}
+                                            //else
+                                            //{
+                                            //    addSalesOrder.Remark1 = cms_data["order_delivery_note"];
+                                            //}
+                                            //string note = FormatAsRTF(order_delivery_note);
+                                            //addSalesOrder.Note = note;
+                                            addSalesOrder.Remark1 = cms_data["order_delivery_note"];
+                                            addSalesOrder.ShipInfo = Helper.ToDateTime(cms_data["deli_date_format"]).ToString();
 
                                             // Let's get the total price 
                                             double net_total;
@@ -222,76 +237,144 @@ namespace EasySales.Job
                                             }
                                             netotal_arr.Clear();
 
-                                            ArrayList allItemList = mysql.Select("SELECT * from cms_order_item WHERE cancel_status = 0 AND order_id = '" + cms_data["order_id"] + "'");
+                                            ArrayList allItemList = mysql.Select("SELECT * from cms_order_item WHERE cancel_status = 0 AND order_id = '" + cms_data["order_id"] + "' ORDER BY order_item_id ASC");
+                                            //ArrayList allItemList = mysql.Select("SELECT p.product_remark, oi.product_code, oi.discount_amount, oi.parent_code, oi.product_name, oi.quantity, oi.unit_uom, oi.unit_price, oi.sub_total, oi.salesperson_remark, oi.packed_qty, p.product_id, up.product_uom_rate AS uom_rate FROM cms_order_item AS oi LEFT JOIN cms_product p ON p.product_code = oi.product_code LEFT JOIN cms_product_uom_price_v2 up ON up.product_code = p.product_code AND up.product_uom = oi.unit_uom AND up.active_status = 1 WHERE oi.cancel_status = 0 AND oi.order_id = '" + cms_data["order_id"] + "' ORDER BY oi.order_item_id ASC");
 
-                                                if (allItemList.Count > 0)
+
+                                            if (allItemList.Count > 0)
+                                            {
+                                                logger.Broadcast("Inserting normal item");
+
+                                                foreach (Dictionary<string, string> item in allItemList)
                                                 {
-                                                    logger.Broadcast("Inserting normal item");
+                                                    //logger.Broadcast("Trying to transfer order item: " + item["product_code"]);
+                                                    decimal.TryParse(item["quantity"], out decimal quantity);
+                                                    decimal.TryParse(item["unit_price"], out decimal unitPrice);
+                                                    decimal.TryParse(item["discount_amount"], out decimal discountAmount);
 
-                                                    foreach (Dictionary<string, string> item in allItemList)
+                                                    if (discountAmount > 0)
                                                     {
-                                                        logger.Broadcast("Trying to transfer order item: " + item["product_code"]);
-                                                        decimal.TryParse(item["quantity"], out decimal quantity);
-                                                        decimal.TryParse(item["unit_price"], out decimal unitPrice);
-                                                        decimal.TryParse(item["discount_amount"], out decimal discountAmount);
-
-                                                        if (discountAmount > 0)
-                                                        {
-                                                            discountAmount = discountAmount / (unitPrice * quantity) * 100;
-                                                        }
-
-                                                        decimal.TryParse(item["sub_total"], out decimal sub_total);
-
-                                                        quantity = Math.Round(quantity, 2);
-                                                        unitPrice = Math.Round(unitPrice, 2);
-                                                        discountAmount = Math.Round(discountAmount, 2);
-                                                        sub_total = Math.Round(sub_total, 2);
-
-                                                        string discount = discountAmount + "%";
-
-                                                        addOrderDetail = addSalesOrder.AddDetail();
-                                                        addOrderDetail.ItemCode = item["product_code"];
-                                                        string salespersonRemark = item["salesperson_remark"];
-                                                        string furtherDescription = FormatAsRTF(salespersonRemark);
-                                                        //Console.WriteLine(furtherDescription);
-                                                        addOrderDetail.FurtherDescription = furtherDescription;
-                                                        addOrderDetail.Description = item["product_name"];
-                                                        addOrderDetail.Qty = quantity;
-                                                        //addOrderDetail.Discount = discount; //kian doesnt want to insert discount -- deployed already
-                                                        addOrderDetail.UOM = item["unit_uom"];
-                                                        addOrderDetail.UnitPrice = unitPrice;
-                                                        addOrderDetail.SubTotal = sub_total;
-                                                        addOrderDetail.Location = LOCATION;
-                                                        addOrderDetail.DiscountAmt = discountAmount;
+                                                        discountAmount = discountAmount / (unitPrice * quantity) * 100;
                                                     }
-                                                }
 
-                                                allItemList.Clear();
+                                                    decimal.TryParse(item["sub_total"], out decimal sub_total);
+
+                                                    quantity = Math.Round(quantity, 2);
+                                                    unitPrice = Math.Round(unitPrice, 2);
+                                                    discountAmount = Math.Round(discountAmount, 2);
+                                                    sub_total = Math.Round(sub_total, 2);
+
+                                                    string discount = discountAmount + "%";
+
+                                                    string product_code = item["product_code"];
+                                                    //string uom_rate = item["uom_rate"];
+                                                    string uom = item["unit_uom"];
+
+                                                    addOrderDetail = addSalesOrder.AddDetail();
+                                                    addOrderDetail.ItemCode = product_code;
+                                                    string salespersonRemark = item["salesperson_remark"];
+                                                    string furtherDescription = FormatAsRTF(salespersonRemark);
+                                                    //Console.WriteLine(furtherDescription);
+                                                    addOrderDetail.FurtherDescription = furtherDescription;
+                                                    addOrderDetail.Description = item["product_name"];
+                                                    addOrderDetail.Qty = quantity;
+                                                    //addOrderDetail.Discount = discount; //kian doesnt want to insert discount -- deployed already
+
+                                                    //string stmtu = "SELECT UOM, Rate, ItemCode, Volume, Weight FROM ItemUOM WHERE ItemCode = '" + product_code + "' AND Rate = '"+ uom_rate + "'";
+                                                    string stmtu = "SELECT UOM, Rate, ItemCode, Volume, Weight FROM ItemUOM where UOM = N\'" + item["unit_uom"] + "' and ItemCode = '" + product_code + "'";
+
+                                                    ArrayList itemUom = mssql.Select(stmtu);
+                                                    mysql.Message("get UOM from MSSQL Query ===> " + stmtu);
+
+                                                    string weight = string.Empty;
+                                                    string volume = string.Empty;
+
+                                                    if (itemUom.Count > 0)
+                                                    {
+                                                        Dictionary<string, string> uomList = (Dictionary<string, string>)itemUom[0];
+
+                                                        uom = uomList["UOM"];
+                                                        uomList.Clear();
+                                                    }
+                                                    else
+                                                    {
+                                                        string msg = "No UOM found for this product code ===> [" + product_code + " | " + uom + "]";
+                                                        mysql.Message(msg);
+                                                        logger.Broadcast(msg);
+
+                                                        //logger.Broadcast("Getting the latest uom for this item");
+                                                        //string __stmtu = "SELECT UOM, Rate, ItemCode, Volume, Weight FROM ItemUOM where ItemCode = '" + product_code + "'";
+
+                                                        //ArrayList __itemUom = mssql.Select(__stmtu);
+                                                        //mysql.Message("check for latest uom for that itemCode due to deleted uom MSSQL Query ===> " + __stmtu);
+                                                        ////check for latest uom for that itemCode
+                                                        //for (int ix = 0; ix < __itemUom.Count; ix++)
+                                                        //{
+                                                        //    Dictionary<string, string> uomList = (Dictionary<string, string>)itemUom[ix];
+                                                        //    string __rate = uomList["Rate"];
+                                                        //    string __uom = uomList["UOM"];
+                                                        //    string __itemCode = uomList["ItemCode"];
+
+                                                        //    if (__rate == uom_rate) //pcs - 1, set - 1
+                                                        //    {
+                                                        //        uom = __uom;
+                                                        //    }
+                                                        //}
+                                                        ////get uom rate from mysql, search in sql based on rate and product code bcs they might changed the product uom
+                                                    }
+                                                    itemUom.Clear();
+
+                                                    addOrderDetail.UOM = uom;
+                                                    addOrderDetail.UnitPrice = unitPrice;
+                                                    addOrderDetail.SubTotal = sub_total;
+                                                    addOrderDetail.Location = LOCATION;
+                                                    addOrderDetail.DiscountAmt = discountAmount;
+                                                    item.Clear();
+                                                }
+                                            }
+                                            else
+                                            {
+                                                string msg = "No items found for this order: [" + orderId + "]. Please check the internet connection.";
+                                                mysql.Insert("UPDATE cms_order SET order_fault_message = '" + msg + "' WHERE order_id = '" + orderId + "'");
+                                                fault++;
+                                            }
+
+                                            allItemList.Clear();
 
                                             try
                                             {
-                                                logger.Broadcast("Trying to save order");
-                                                addSalesOrder.Save();
-                                                logger.Broadcast("Sales Order [" + orderId + "] created");
-                                                int.TryParse(order_status, out int int_order_status);
-                                                int updateOrderStatus = int_order_status + 1;
-                                                string updateStatusQuery = "UPDATE cms_order SET order_status = '" + updateOrderStatus + "' WHERE order_id = '" + cms_data["order_id"] + "'";
-
-                                                int failCounter = 0;
-                                            checkUpdateStatus:
-                                                bool updateStatus = mysql.Insert(updateStatusQuery);
-                                                mysql.Message(updateStatusQuery);
-                                                if (!updateStatus)
+                                                if(fault == 0)
                                                 {
-                                                    //order transferred to ATC but fail to update order_status in our db
-                                                    //delay 2 seconds before try update status again
-                                                    Task.Delay(2000);
-                                                    failCounter++;
-                                                    if (failCounter < 4)
+                                                    logger.Broadcast("Trying to save order");
+                                                    addSalesOrder.Save();
+                                                    logger.Broadcast("Sales Order [" + orderId + "] created");
+                                                    int.TryParse(order_status, out int int_order_status);
+                                                    int updateOrderStatus = int_order_status + 1;
+                                                    string updateStatusQuery = "UPDATE cms_order SET order_status = '" + updateOrderStatus + "' WHERE order_id = '" + cms_data["order_id"] + "'";
+
+                                                    int failCounter = 0;
+                                                checkUpdateStatus:
+                                                    bool updateStatus = mysql.Insert(updateStatusQuery);
+                                                    mysql.Message(updateStatusQuery);
+                                                    if (!updateStatus)
                                                     {
-                                                        goto checkUpdateStatus;
+                                                        //order transferred to ATC but fail to update order_status in our db
+                                                        //delay 2 seconds before try update status again
+                                                        Task.Delay(2000);
+                                                        failCounter++;
+                                                        if (failCounter < 4)
+                                                        {
+                                                            goto checkUpdateStatus;
+                                                        }
                                                     }
                                                 }
+                                                else
+                                                {
+                                                    logger.Broadcast("Abort order: Fault (" + fault + ")");
+                                                    logger.Broadcast("Proceeding next order");
+                                                    goto NextOrders;
+                                                }
+                                                
                                             }
                                             catch (Exception ex)
                                             {
@@ -346,7 +429,51 @@ namespace EasySales.Job
                                             //Console.WriteLine(ex.Message);
                                             logger.Broadcast("Failed to transfer: " + ex.Message);
                                             AutoCountV1.Message("Failed to transfer: " + ex.Message);
+
+                                            logger.Broadcast("Failed to transfer [" + orderId + "]: " + ex.Message);
+                                            AutoCountV2.Message("Failed to transfer [" + orderId + "]: " + ex.Message);
+
+                                            if (ex.Message == "Primary Key Error")
+                                            {
+                                                int.TryParse(order_status, out int int_order_status);
+                                                int updateOrderStatus = int_order_status + 1;
+                                                string updateStatusQuery = "UPDATE cms_order SET order_status = '" + updateOrderStatus + "' WHERE order_id = '" + cms_data["order_id"] + "'";
+
+                                                int failCounter = 0;
+                                            checkUpdateStatus:
+                                                bool updateStatus = mysql.Insert(updateStatusQuery);
+                                                mysql.Message(updateStatusQuery);
+                                                if (!updateStatus)
+                                                {
+                                                    //order transferred to ATC but fail to update order_status in our db
+                                                    //delay 2 seconds before try update status again
+                                                    Task.Delay(2000);
+                                                    failCounter++;
+                                                    if (failCounter < 4)
+                                                    {
+                                                        goto checkUpdateStatus;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    logger.Broadcast("[" + orderId + "] already created. Kindly check in the AutoCount");
+                                                    AutoCountV1.Message("[" + orderId + "] already created. Kindly check in the AutoCount");
+                                                }
+                                            }
+                                            else if (ex.Message.IndexOf("limit") != -1)
+                                            {
+                                                //This customer account[J BEDS & SOFA] has exceeded the credit limit.
+                                                string msg = "This customer account [" + cms_data["cust_company_name"] + "] has exceeded the credit limit";
+                                                mysql.Insert("UPDATE cms_order SET order_fault_message = '" + msg + "' WHERE order_id = '" + orderId + "'");
+                                            }
+                                            else
+                                            {
+                                                mysql.Insert("UPDATE cms_order SET order_fault_message = '" + ex.Message + "' WHERE order_id = '" + orderId + "'");
+                                            }
                                         }
+                                        cms_data.Clear();
+                                    NextOrders:
+                                        Console.WriteLine("Next Orders");
                                     }
                                 }
                                 else
@@ -366,7 +493,7 @@ namespace EasySales.Job
                             mysql.Message("Cannot connect to MYSQL Host at the moment. Kindly wait");
                         }
                     });
-
+                    
                     mysql_list.Clear();
                     mssql_list.Clear();
 

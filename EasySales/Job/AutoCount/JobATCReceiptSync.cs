@@ -44,6 +44,7 @@ namespace EasySales.Job
 
                     DateTime startTime = DateTime.Now;
 
+                    LocalDB.DBCleanup();
                     LocalDB.InsertSyncLog(slog);
 
                     logger.message = "ATC receipt sync is running";
@@ -61,7 +62,7 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("cms_receipt_atc");
 
-                        Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_receipt");
+                        //Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_receipt");
 
                         ArrayList mssql_rule = new ArrayList();
 
@@ -123,9 +124,7 @@ namespace EasySales.Job
                             throw new Exception("ATC Receipt sync requires backend rules");
                         }
 
-                        mysql.Insert("UPDATE cms_receipt SET cancelled = 'T'"); //deactivate all first
-
-                        ArrayList custAgentFromDb = mysql.Select("SELECT cs.customer_id, c.cust_code, cs.salesperson_id FROM cms_customer_salesperson AS cs LEFT JOIN cms_customer AS c ON cs.customer_id = c.cust_id");
+                        ArrayList custAgentFromDb = mysql.Select("SELECT cs.customer_id, c.cust_code, cs.salesperson_id FROM cms_customer_salesperson AS cs LEFT JOIN cms_customer AS c ON cs.customer_id = c.cust_id WHERE cs.active_status = 1");
                         Dictionary<string, string> custAgentList = new Dictionary<string, string>();
 
                         for (int i = 0; i < custAgentFromDb.Count; i++)
@@ -148,6 +147,11 @@ namespace EasySales.Job
                             //Console.WriteLine(database.Query);
 
                             ArrayList queryResult = mssql.Select(database.Query);
+                            if(queryResult.Count > 0)
+                            {
+                                logger.Broadcast("Receipt to be inserted: " + queryResult.Count);
+                                mysql.Insert("UPDATE cms_receipt SET cancelled = 'T'"); //deactivate all first
+                            }
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -380,22 +384,16 @@ namespace EasySales.Job
                                 logger.message = string.Format("{0} receipt records is inserted into " + mysqlconfig.config_database, RecordCount);
                                 logger.Broadcast();
                             }
-
-                            if (cms_updated_time.Count > 0)
-                            {
-                                mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_receipt'");
-                            }
-                            else
-                            {
-                                mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_receipt', NOW())");
-                            }
+                            
+                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_receipt', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
                             RecordCount = 0; /* reset count */
                             mysqlFieldList.Clear();
                             queryResult.Clear();
+                            custAgentList.Clear();
                         });
                         mssql_rule.Clear();
-                        cms_updated_time.Clear();
+                        //cms_updated_time.Clear();
                     });
 
                     mysql_list.Clear();

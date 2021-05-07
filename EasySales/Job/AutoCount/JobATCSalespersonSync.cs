@@ -70,7 +70,7 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("cms_login_atc");
 
-                        Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_login");
+                        //Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_login");
 
                         ArrayList mssql_rule = new ArrayList();
 
@@ -142,7 +142,10 @@ namespace EasySales.Job
                             mssql.Connect(dbname: database.DBname);
 
                             ArrayList queryResult = mssql.Select(database.Query);
-                            //Console.WriteLine(database.Query);
+                            if (queryResult.Count > 0)
+                            {
+                                logger.Broadcast("Agents to be inserted: " + queryResult.Count);
+                            }
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -265,7 +268,7 @@ namespace EasySales.Job
                                     insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                     mysql.Insert(insertQuery);
-                                    mysql.Message(insertQuery);
+                                    mysql.Message("Agent Query =====> " + insertQuery);
 
                                     insertQuery = insertQuery.ReplaceAll("@values", values);
                                     valueString.Clear();
@@ -284,7 +287,7 @@ namespace EasySales.Job
                                 insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                 mysql.Insert(insertQuery);
-                                mysql.Message(insertQuery);
+                                mysql.Message("Agent Query =====> " + insertQuery);
 
                                 insertQuery = insertQuery.ReplaceAll("@values", values);
                                 valueString.Clear();
@@ -297,17 +300,10 @@ namespace EasySales.Job
                             queryResult.Clear();
                         });
                         mssql_rule.Clear();
+                        
+                        mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_login', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
-                        if (cms_updated_time.Count > 0)
-                        {
-                            mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_login'");
-                        }
-                        else
-                        {
-                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_login', NOW())");
-                        }
-
-                        cms_updated_time.Clear();
+                        //cms_updated_time.Clear();
                     });
 
                     mysql_list.Clear();

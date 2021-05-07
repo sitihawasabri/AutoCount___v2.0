@@ -440,6 +440,7 @@ namespace EasySales.Job
                                         mysql.Insert(updateItemFault);
                                         mysql.Message("Item Fault Query ===> " + updateItemFault);
                                         goto proceedNextItems;
+                                        fault++;
                                     }
                                     itemUom.Clear();
 
@@ -454,11 +455,12 @@ namespace EasySales.Job
                                     string orderKey = dockey; //dockey from order insert
 
                                     string values_dtl = string.Format("('{0}', '{1}', '{2}', '{3}', '{4}', {5}', {6}', {7}', {8}', '{9}', '{10}', '{11}', '{12}', '{13}', '{14}', '{15}', '{16}', '{17}', '{18}', '{19}', '{20}', '{21}', '{22}', '{23}', '{24}', '{25}', '{26}', '{27}', '{28}', '{29}', '{30}', '{31}', '{32}', '{33}', '{34}', '{35}')", _maxDelKey, orderKey, sequence_no, "T", product_code, "N'" + furtherDescription, "N'HQ", "N'" + atc_description, "N'" + item["unit_uom"], item["unit_uom"], item["quantity"], u_rate, smallestQty, 0, 0, smallest_unit_price, price_to_insert, 0, total_tax, sub_total, sub_total, "T", "T", "N", "T", "F", sub_total, total_tax, deliveryDate, sub_total, sub_total, TaxrateGet, sub_total, total_tax, sub_total, discount);
+                                    //logger.Broadcast("Values Dtl ===>" + values_dtl);
+                                    mysql.Message("values_dtl ====> " + values_dtl);
 
                                     if (fault == 0)
                                     {
                                         logger.Broadcast("fault ===> " + fault);
-                                        mysql.Message("values_dtl ====> " + values_dtl);
                                         ValuesDtlList.Add(values_dtl);
                                         mysql.Insert("UPDATE cms_warehouse_stock SET cloud_qty = cloud_qty - " + quantity + " WHERE product_code = '" + product_code + "';");
                                     }
@@ -467,7 +469,7 @@ namespace EasySales.Job
                                     Console.WriteLine("proceedNextItems");
                                 }
 
-                                if (fault == 0)
+                                if (fault == 0 && ValuesDtlList.Count > 0)
                                 {
                                     /* insert order here */
                                     string insertSO = ss_sql + string.Join(", ", values);

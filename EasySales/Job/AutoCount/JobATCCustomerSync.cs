@@ -41,6 +41,7 @@ namespace EasySales.Job
                     Thread.CurrentThread.IsBackground = true;
 
                     int RecordCount = 0;
+                    int custToBeSync = 0;
                     GlobalLogger logger = new GlobalLogger();
 
                     DpprSyncLog slog = new DpprSyncLog();
@@ -142,7 +143,6 @@ namespace EasySales.Job
                         {
                             Dictionary<string, string> each = (Dictionary<string, string>)getActiveCustomers[i];
                             string custCode = each["cust_code"];
-                            mysql.Message("cust code: " + custCode);
 
                             if(!activeCustCode.Contains(custCode))
                             {
@@ -169,9 +169,13 @@ namespace EasySales.Job
                                 }
                             }
                             outstandingFromDb.Clear();
+                            logger.Broadcast("outstandingList: " + outstandingList.Count);
 
                             ArrayList queryResult = mssql.Select(database.Query);
                             //Console.WriteLine(database.Query);
+
+                            logger.Broadcast("Customer to be inserted: " + queryResult.Count);
+                            custToBeSync = queryResult.Count;
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -289,9 +293,7 @@ namespace EasySales.Job
                                                     int indexx = activeCustCode.IndexOf(AccNo);
                                                     if (indexx != -1)
                                                     {
-                                                        mysql.Message("Remove Cust Code ===> " + AccNo);
-                                                        activeCustCode.RemoveAt(indexx);
-                                                        mysql.Message("After remove activeCustCode ======>" + activeCustCode.Count);
+                                                        activeCustCode.RemoveAt(indexx);//mysql.Message("After remove activeCustCode ======>" + activeCustCode.Count);
                                                     }
                                                 }
 
@@ -439,46 +441,43 @@ namespace EasySales.Job
                                 logger.Broadcast();
                             }
 
-                            if(activeCustCode.Count > 0)
+                            if(custToBeSync > 0)
                             {
-                                //for blue martin it keeps deactivating those cust code which returned from mssql -.-
-                                logger.Broadcast("Total customer records to be deactivated: " + activeCustCode.Count);
-
-                                HashSet<string> deactivateId = new HashSet<string>();
-                                for (int i = 0; i < activeCustCode.Count; i++)
+                                if(activeCustCode.Count > 0)
                                 {
-                                    string _id = activeCustCode[i].ToString();
-                                    if(deactivateId.Contains(_id))
+                                    logger.Broadcast("Total customer records to be deactivated: " + activeCustCode.Count);
+
+                                    HashSet<string> deactivateId = new HashSet<string>();
+                                    for (int i = 0; i < activeCustCode.Count; i++)
                                     {
-                                        deactivateId.Add(_id);
+                                        string _id = activeCustCode[i].ToString();
+                                        if(deactivateId.Contains(_id))
+                                        {
+                                            deactivateId.Add(_id);
+                                        }
                                     }
+
+                                    string ToBeDeactivate = "'" + string.Join("','", deactivateId) + "'";
+                                    mysql.Message("DEACTIVATE CUSTOMER: " + ToBeDeactivate);
+
+                                    string inactive = "UPDATE cms_customer SET customer_status = 0 WHERE cust_code IN (" + ToBeDeactivate + ")";
+                                    mysql.Insert(inactive);
+                                    mysql.Message("DEACTIVATE CUSTOMER QUERY ======> " + inactive);
+
+                                    logger.Broadcast(activeCustCode.Count + " customer records deactivated");
+                                    activeCustCode.Clear();
+                                    deactivateId.Clear();
                                 }
-
-                                string ToBeDeactivate = "'" + string.Join("','", deactivateId) + "'";
-                                mysql.Message("DEACTIVATE CUSTOMER: " + ToBeDeactivate);
-
-                                string inactive = "UPDATE cms_customer SET customer_status = 0 WHERE cust_code IN (" + ToBeDeactivate + ")";
-                                mysql.Insert(inactive);
-                                mysql.Message("DEACTIVATE CUSTOMER QUERY ======> " + inactive);
-
-                                logger.Broadcast(activeCustCode.Count + " customer records deactivated");
-                                activeCustCode.Clear();
                             }
 
                             RecordCount = 0; /* reset count for the next db */
                             mysqlFieldList.Clear();
                             queryResult.Clear();
+                            activeCustCode.Clear();
                         });
                         mssql_rule.Clear();
 
-                        if (cms_updated_time.Count > 0)
-                        {
-                            mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_customer'");
-                        }
-                        else
-                        {
-                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_customer', NOW())");
-                        }
+                        mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_customer', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
                         cms_updated_time.Clear();
                     });
 

@@ -61,7 +61,7 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("cms_product_uom_price_v2_atc");
 
-                        Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_product_uom_price_v2");
+                        //Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_product_uom_price_v2");
 
                         ArrayList mssql_rule = new ArrayList();
 
@@ -73,10 +73,10 @@ namespace EasySales.Job
                                 {
                                     string query = "SELECT UPPER(LTRIM(RTRIM(ItemUOM.UOM))) as tUOM, UPPER(LTRIM(RTRIM(Item.BaseUOM))) as bUOM, UPPER(LTRIM(RTRIM(Item.SalesUOM))) as sUOM,ItemUOM.*, ItemUOM.Price, ItemUOM.MinSalePrice, Item.* FROM dbo.ItemUOM LEFT JOIN dbo.Item on Item.ItemCode = ItemUOM.ItemCode";
 
-                                    if (cms_updated_time.Count > 0)
-                                    {
-                                        string updated_at = cms_updated_time["updated_at"].ToString().MSSQLdate();
-                                    }
+                                    //if (cms_updated_time.Count > 0)
+                                    //{
+                                    //    string updated_at = cms_updated_time["updated_at"].ToString().MSSQLdate();
+                                    //}
 
                                     var mssql_rules = key.mssql;
                                     foreach (var db in mssql_rules)
@@ -132,7 +132,6 @@ namespace EasySales.Job
                         {
                             SQLServer mssql = new SQLServer();
                             mssql.Connect(dbname: database.DBname);
-                            //Console.WriteLine(database.Query);
 
                             ArrayList queryResult = mssql.Select(database.Query);
 
@@ -182,6 +181,12 @@ namespace EasySales.Job
                             });
 
                             HashSet<string> valueString = new HashSet<string>();
+                            if(queryResult.Count > 0)
+                            {
+                                /** deactivate all first before insert **/
+                                logger.Broadcast("Product UOM Price to be inserted: " + queryResult.Count);
+                                mysql.Insert("UPDATE cms_product_uom_price_v2 SET active_status = 0");
+                            }
                             queryResult.Iterate<Dictionary<string, string>>((map, i) =>
                             {
                                 string row = string.Empty;
@@ -333,22 +338,15 @@ namespace EasySales.Job
                                 logger.message = string.Format("{0} stock uom price records is inserted into " + mysqlconfig.config_database, RecordCount);
                                 logger.Broadcast();
                             }
-
-                            if (cms_updated_time.Count > 0)
-                            {
-                                mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_product_uom_price_v2'");
-                            }
-                            else
-                            {
-                                mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_product_uom_price_v2', NOW())");
-                            }
+                            
+                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_product_uom_price_v2', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
                             RecordCount = 0; /* reset count for the next database */
                             mysqlFieldList.Clear();
                             queryResult.Clear();
                         });
                         mssql_rule.Clear();
-                        cms_updated_time.Clear();
+                        //cms_updated_time.Clear();
                     });
 
                     mysql_list.Clear();

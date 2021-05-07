@@ -44,6 +44,7 @@ namespace EasySales.Job
 
                     DateTime startTime = DateTime.Now;
 
+                    LocalDB.DBCleanup();
                     LocalDB.InsertSyncLog(slog);
 
                     logger.message = "ATC invoice sync is running";
@@ -123,7 +124,6 @@ namespace EasySales.Job
                             throw new Exception("ATC Invoice sync requires backend rules");
                         }
 
-                        mysql.Insert("UPDATE cms_invoice SET cancelled = 'T'"); //deactivate all first
                         ArrayList salespersonFromDb = mysql.Select("SELECT login_id, UPPER(TRIM(staff_code)) AS staff_code FROM cms_login");
                         Dictionary<string, string> salespersonList = new Dictionary<string, string>();
 
@@ -134,8 +134,6 @@ namespace EasySales.Job
                         }
                         salespersonFromDb.Clear();
 
-                        
-
                         mssql_rule.Iterate<ATCRule>((database, idx) =>
                         {
                             SQLServer mssql = new SQLServer();
@@ -144,6 +142,11 @@ namespace EasySales.Job
                             //Console.WriteLine(database.Query);
 
                             ArrayList queryResult = mssql.Select(database.Query);
+                            if(queryResult.Count > 0)
+                            {
+                                logger.Broadcast("Invoice to be inserted: " + queryResult.Count);
+                                mysql.Insert("UPDATE cms_invoice SET cancelled = 'T'"); //deactivate all first
+                            }
 
                             string mysql_insert = string.Empty;
                             string mssql_insert = string.Empty;
@@ -327,7 +330,7 @@ namespace EasySales.Job
                                     insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                     mysql.Insert(insertQuery);
-                                    mysql.Message(insertQuery);
+                                    mysql.Message("Invoice Query ====> " + insertQuery);
 
                                     insertQuery = insertQuery.ReplaceAll("@values", values);
                                     valueString.Clear();
@@ -336,7 +339,6 @@ namespace EasySales.Job
                                     logger.Broadcast();
                                 }
                             });
-                            
 
                             if (valueString.Count > 0)
                             {
@@ -345,7 +347,7 @@ namespace EasySales.Job
                                 insertQuery = insertQuery.ReplaceAll(values, "@values");
 
                                 mysql.Insert(insertQuery);
-                                mysql.Message(insertQuery);
+                                mysql.Message("Invoice Query ====> " + insertQuery);
 
                                 insertQuery = insertQuery.ReplaceAll("@values", values);
                                 valueString.Clear();
@@ -353,19 +355,13 @@ namespace EasySales.Job
                                 logger.message = string.Format("{0} invoice records is inserted into " + mysqlconfig.config_database, RecordCount);
                                 logger.Broadcast();
                             }
-
-                            if (cms_updated_time.Count > 0)
-                            {
-                                mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_invoice'");
-                            }
-                            else
-                            {
-                                mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_invoice', NOW())");
-                            }
+                            
+                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_invoice', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
                             RecordCount = 0; /* reset count */
                             queryResult.Clear();
                             mysqlFieldList.Clear();
+                            salespersonList.Clear();
                         });
                         mssql_rule.Clear();
                         cms_updated_time.Clear();

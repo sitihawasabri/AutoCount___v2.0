@@ -76,7 +76,7 @@ namespace EasySales.Job
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("cms_warehouse_stock_atc");
 
-                        Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_warehouse_stock");
+                        //Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_warehouse_stock");
 
                         ArrayList mssql_rule = new ArrayList();
 
@@ -280,6 +280,10 @@ namespace EasySales.Job
                             string uomName = string.Empty;
 
                             ArrayList queryResult = mssql.Select(database.Query);
+                            if (queryResult.Count > 0)
+                            {
+                                logger.Broadcast("Warehouse Qty to be inserted: " + queryResult.Count);
+                            }
 
                             HashSet<string> valueString = new HashSet<string>();
                             queryResult.Iterate<Dictionary<string, string>>((map, i) =>
@@ -473,16 +477,14 @@ namespace EasySales.Job
 
                                 logger.message = string.Format("{0} warehouse quantity records is inserted into " + mysqlconfig.config_database, RecordCount);
                                 logger.Broadcast();
+                                valueString.Clear();
                             }
 
-                            if (cms_updated_time.Count > 0)
-                            {
-                                mysql.Insert("UPDATE cms_update_time SET updated_at = NOW() WHERE table_name = 'cms_warehouse_stock'");
-                            }
-                            else
-                            {
-                                mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_warehouse_stock', NOW())");
-                            }
+                            uniqueKeyList.Clear();
+                            itemList.Clear();
+                            warehouseItemList.Clear();
+
+                            mysql.Insert("INSERT INTO cms_update_time(table_name, updated_at) VALUES('cms_warehouse_stock', NOW()) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)");
 
                             RecordCount = 0; /* reset count for the next database */
                             mysqlFieldList.Clear();
