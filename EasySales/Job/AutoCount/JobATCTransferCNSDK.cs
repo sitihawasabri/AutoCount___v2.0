@@ -285,7 +285,7 @@ namespace EasySales.Job
                                                 {
                                                     int.TryParse(order_status, out int int_order_status);
                                                     int updateOrderStatus = int_order_status + 1;
-                                                    mysql.Insert("UPDATE cms_order SET order_status = '" + updateOrderStatus + "' WHERE order_id = '" + cash_id + "'");
+                                                    mysql.Insert("UPDATE cms_order SET order_status = '" + updateOrderStatus + "' WHERE order_id = '" + cnID + "'");
                                                 }
                                                 else
                                                 {

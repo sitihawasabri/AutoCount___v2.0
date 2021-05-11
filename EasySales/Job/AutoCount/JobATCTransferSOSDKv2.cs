@@ -335,6 +335,7 @@ namespace EasySales.Job
                                             else
                                             {
                                                 string msg = "No items found for this order: [" + orderId + "]. Please check the internet connection.";
+                                                Database.Sanitize(ref msg);
                                                 mysql.Insert("UPDATE cms_order SET order_fault_message = '" + msg + "' WHERE order_id = '" + orderId + "'");
                                                 fault++;
                                             }
@@ -370,7 +371,7 @@ namespace EasySales.Job
                                                 }
                                                 else
                                                 {
-                                                    logger.Broadcast("Abort order: Fault (" + fault + ")");
+                                                    logger.Broadcast("Abort order: Fault (" + fault + "). Kindly check the order fault message.");
                                                     logger.Broadcast("Proceeding next order");
                                                     goto NextOrders;
                                                 }
@@ -414,7 +415,8 @@ namespace EasySales.Job
                                                 else if (ex.Message.IndexOf("limit") != -1)
                                                 {
                                                     //This customer account[J BEDS & SOFA] has exceeded the credit limit.
-                                                    string msg = "This customer account ["+ cms_data["cust_company_name"] +"] has exceeded the credit limit";
+                                                    string msg = "This customer account ["+ cms_data["cust_company_name"] +"] has exceeded the credit limit: " + ex.Message;
+                                                    Database.Sanitize(ref msg);
                                                     mysql.Insert("UPDATE cms_order SET order_fault_message = '" + msg + "' WHERE order_id = '" + orderId + "'");
                                                 }
                                                 else

@@ -224,6 +224,19 @@ namespace EasySales.Job
                             insertQuery = insertQuery.ReplaceAll(columns, "@columns");
                             insertQuery = insertQuery.ReplaceAll(update_columns, "@update_columns");
 
+                            int moderator = 0;
+                            ArrayList checkColumnExist = mysql.Select("SHOW COLUMNS FROM cms_product LIKE 'moderator';");
+                            if (checkColumnExist.Count > 0)
+                            {
+                                moderator = 1;
+                            }
+                            logger.Broadcast("Moderator ===> " + moderator);
+
+                            if (moderator == 1)
+                            {
+                                insertQuery = insertQuery.Replace("product_status=VALUES(product_status)", "product_status=IF(moderator = '' OR moderator IS NULL, VALUES(product_status), product_status)");
+                            }
+
                             ArrayList mysqlFieldList = new ArrayList(); /* get all mysql field column */
                             database.Include.Iterate<Dictionary<string, string>>((incDict, incindex) =>
                             {
