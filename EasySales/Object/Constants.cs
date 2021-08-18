@@ -116,6 +116,7 @@ namespace EasySales.Object
         public static string Action_ATC_Transfer_Stock = "ATCTransferStock";                                                  /* ATC */
         public static string Action_ATC_Transfer_CS = "ATCTransferCS";                                                  /* ATC */
         public static string Action_ATC_Transfer_INV = "ATCTransferINV";                                                  /* ATC */
+        public static string Action_ATC_Transfer_DO = "ATCTransferDO";                                                  /* ATC */
         public static string Action_ATC_Transfer_CN = "ATCTransferCN";                                                  /* ATC */
         public static string Action_ATCStockCardSync = "atcstockcard_sync";                                                  /* ATC */
         public static string Action_ATCWHReadyStockSync = "atcwhreadystock_sync";

@@ -92,6 +92,8 @@ namespace EasySales.Job
                         string order_status = "2";
                         string autoCount_sst = "false";
                         string order_id_format = "<<New>>";
+                        int enable_credit_control = 0;
+                        string acc_no = "500-00000";
 
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("transfer_cs_atc");
@@ -109,9 +111,22 @@ namespace EasySales.Job
                                         targetDBname = db.name != null ? db.name : targetDBname;
                                         order_status = db.order_status != null ? db.order_status : order_status;
                                         order_id_format = db.order_id_format != null ? db.order_id_format : order_id_format;
+                                        if (db.enable_credit_control != null)
+                                        {
+                                            enable_credit_control = db.enable_credit_control;
+                                        }
+
+                                       
+
+                                        if (db.acc_no != null)
+                                        {
+                                            acc_no = db.acc_no;
+                                        }
                                     }
                                 }
                             }
+
+                            logger.Broadcast("Acc No: " + acc_no);
 
                             //this.connection = ATC_Configuration.Init_config();
                             //this.connection.dBSetting = AutoCountV1.PerformAuth(ref this.connection);
@@ -155,6 +170,14 @@ namespace EasySales.Job
                                         //CashSaleDetail addCashDocDetail;
 
                                         dynamic addCashDoc = autoCount.NewCashSales();
+                                        if (enable_credit_control == 0)
+                                        {
+                                            addCashDoc.DisableCreditControl();
+                                        }
+                                        else
+                                        {
+                                            addCashDoc.EnableCreditControl();
+                                        }
 
                                         Thread.CurrentThread.CurrentCulture = new CultureInfo("en-GB");
                                         cash_id = cms_data["order_id"];
@@ -249,7 +272,7 @@ namespace EasySales.Job
                                                 dynamic addCashDocDetail = autoCount.NewCashSalesDetails(addCashDoc);
 
                                                 //addCashDocDetail = addCashDoc.AddDetail();
-                                                addCashDocDetail.AccNo = "500-0000";
+                                                addCashDocDetail.AccNo = acc_no;
                                                 string itemCode = item["product_code"];
                                                 addCashDocDetail.ItemCode = itemCode;
                                                 addCashDocDetail.FurtherDescription = item["product_remark"];

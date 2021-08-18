@@ -451,7 +451,7 @@ namespace EasySales.Job
                                     for (int i = 0; i < activeCustCode.Count; i++)
                                     {
                                         string _id = activeCustCode[i].ToString();
-                                        if(deactivateId.Contains(_id))
+                                        if(!deactivateId.Contains(_id))
                                         {
                                             deactivateId.Add(_id);
                                         }

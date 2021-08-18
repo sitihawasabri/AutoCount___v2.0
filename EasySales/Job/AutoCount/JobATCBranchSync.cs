@@ -126,9 +126,6 @@ namespace EasySales.Job
                                         };
 
                                         mssql_rule.Add(ATC_rule);
-
-                                        include.Clear();
-                                        exclude.Clear();
                                     }
                                 }
                             }

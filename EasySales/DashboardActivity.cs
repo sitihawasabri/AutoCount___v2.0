@@ -15,7 +15,6 @@ using Quartz.Impl;
 using System.Collections.Specialized;
 using EasySales.Job;
 using System.Runtime.Remoting.Contexts;
-using EasySales.Job.APS;
 using System.Threading;
 using Microsoft.EntityFrameworkCore.Internal;
 using System.Collections;
@@ -31,8 +30,6 @@ namespace EasySales
 {
     public partial class DashboardActivity : Form
     {
-        
-        SQLAccApi software = null;
         private UpdateInfoEventArgs args;
         public DashboardActivity()
         {
@@ -755,16 +752,6 @@ namespace EasySales
 
         private void btn_trigger_sqlaccounting_Click(object sender, EventArgs e)
         {
-
-            if (SQLAccApi.CurrentState() != null)
-            {
-                software.Logout();
-            }
-            else
-            {
-                software = SQLAccApi.getInstance();
-            }
-            software.GetComServer();
         }
 
         private void DashboardActivity_Load(object sender, EventArgs e)
@@ -781,11 +768,6 @@ namespace EasySales
                 time = DateTime.Now.ToString()
             };
             LocalDB.InsertException(ex);
-            if (software != null)
-            {
-                software.Logout();
-            }
-            Suicide();
         }
 
         public void Suicide()
@@ -802,16 +784,6 @@ namespace EasySales
         }
         private void btn_terminate_Click(object sender, EventArgs e)
         {
-            DpprException ex = new DpprException
-            {
-                file_name = "EXE",
-                exception = "EXE terminated",
-                time = DateTime.Now.ToString()
-            };
-            LocalDB.InsertException(ex);
-
-            SQLAccApi.getInstance().Logout();
-            Suicide();
         }
 
         private void GlobalEvenListener(object sender, GlobalEvent e)
@@ -1204,9 +1176,6 @@ namespace EasySales
         private void btn_reset_setting_Click(object sender, EventArgs e)
         {
             LocalDB.Execute("DELETE FROM accounting_software;DELETE FROM configuration;DELETE FROM user_settings;DELETE FROM ftp_server;DELETE FROM sql_server");
-
-            SQLAccApi.getInstance().Logout();
-            Suicide();
         }
 
         private void cb_outso_CheckedChanged(object sender, EventArgs e)
@@ -1830,25 +1799,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] stock sync is set to run now";
-                logger.Broadcast();
-                new JobProductSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "[QNE] stock sync is set to run now";
-                logger.Broadcast();
-                new JobStockSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] stock sync is set to run now";
-                logger.Broadcast();
-                new JobAPSStockSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] stock sync is set to run now";
                 logger.Broadcast();
@@ -1859,16 +1810,6 @@ namespace EasySales
                     //new JobATCStockCardSync().Execute();
                 }
             }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[Sage UBS] stock sync is set to run now";
-                logger.Broadcast();
-            }
-            else
-            {
-                logger.message = "This button is unable for the moment";
-                logger.Broadcast();
-            }
         }
 
         private void btn_run_stockcardsync_Click(object sender, EventArgs e)
@@ -1877,13 +1818,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] stock card sync is set to run now";
-                logger.Broadcast();
-                new JobStockCardSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[ATC] stock card sync is set to run now";
                 logger.Broadcast();
@@ -1901,28 +1836,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] customer sync is set to run now";
-                logger.Broadcast();
-                new JobCustSync().Execute();
-                btn_run_custsync.Enabled = false;
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "This button is not enabled for QNE customer sync at the moment. Customer sync will run at set interval";
-                logger.message = "[QNE] customer sync is set to run now";
-                logger.Broadcast();
-                new JobCustomerSync().Execute();
-            }
-            else if(accSoftware.software_name == "APS")
-            {
-                //logger.message = "This button is not enabled for [APS] customer sync at the moment. Customer sync will run at set interval";
-                logger.message = "[APS] customer sync is set to run now";
-                logger.Broadcast();
-                new JobAPSCustomerSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] customer sync is set to run now";
                 logger.Broadcast();
@@ -1941,25 +1855,6 @@ namespace EasySales
             GlobalLogger logger = new GlobalLogger();
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
-
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] Transfer Payment is set to run now";
-                logger.Broadcast();
-                new JobPaymentTransfer().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";// transfer SO sync at the moment. Transfer SO sync will run at set interval";
-                //logger.message = "[QNE] Transfer SO sync is set to run now";
-                logger.Broadcast();
-            }
-            else
-            {
-                logger.message = "This button is not enabled for [APS]";// transfer SO sync at the moment. Transfer SO sync will run at set interval";
-                //logger.message = "[APS] Transfer SO is set to run now";
-                logger.Broadcast();
-            }
         }
 
         private void btn_run_transferso_Click(object sender, EventArgs e)
@@ -1968,28 +1863,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] Transfer SO is set to run now";
-                logger.Broadcast();
-                new JobSoTransfer().Execute();
-                //throw new Exception("crash on purpose");
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "This button is not enabled for QNE transfer SO sync at the moment. Transfer SO sync will run at set interval";
-                logger.message = "[QNE] Transfer SO sync is set to run now";
-                logger.Broadcast();
-                new JobPostSalesOrders().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] Transfer SO is set to run now";
-                logger.Broadcast();
-                new JobAPSTransferSO().Execute();
-                //new JobAPSTransferSOTrial().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] Transfer SO is set to run now";
                 logger.Broadcast();
@@ -2011,16 +1885,6 @@ namespace EasySales
                     new JobATCTransferSO().Execute();
                 }
             }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[Sage UBS] Transfer SO is set to run now";
-                logger.Broadcast();
-            }
-            else
-            {
-                logger.message = "Not available";
-                logger.Broadcast();
-            }
         }
         private void btn_run_invsync_Click(object sender, EventArgs e)
         {
@@ -2028,25 +1892,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] invoice sync is set to run now";
-                logger.Broadcast();
-                new JobInvoiceSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "[QNE] invoice sync is set to run now";
-                logger.Broadcast();
-                new JobInvoiceQneSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] invoice sync is set to run now";
-                logger.Broadcast();
-                new JobAPSInvoiceSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] invoice sync is set to run now";
                 logger.Broadcast();
@@ -2071,26 +1917,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] invoice details sync is set to run now";
-                logger.Broadcast();
-                new JobInvoiceDetailsSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "[QNE] invoice details sync is set to run now";
-                logger.Broadcast();
-                new JobInvoiceDetailsQneSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                //logger.message = "This button is not enabled for [APS] invoice detail sync at the moment. Invoice detail sync will run at set interval";
-                logger.message = "[APS] invoice details sync is set to run now";
-                logger.Broadcast();
-                new JobAPSInvoiceDetailSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] invoice details sync is set to run now";
                 logger.Broadcast();
@@ -2115,50 +1942,13 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] customer-agent sync is set to run now";
-                logger.Broadcast();
-                new JobSalesPersonSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "This button is not enabled for [QNE] customer-agent sync at the moment. Customer-agent sync will run at set interval";
-                logger.message = "[QNE] customer-agent sync is set to run now";
-                logger.Broadcast();
-                new JobAgentSync().Execute();
-                new JobCustomerAgentSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] customer-agent sync is set to run now";
-                logger.Broadcast();
-
-                logger.message = "[APS] ref sync is set to run now";
-                logger.Broadcast();
-
-                new JobAPSSalespersonSync().Execute();
-                new JobAPSSalespersonCustomerSync().Execute();
-                new JobAPSRefSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] salesperson sync is set to run now";
                 logger.Broadcast();
 
                 new JobATCSalespersonSync().Execute();
                 new JobATCSalespersonCustomerSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] salesperson sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
         
@@ -2172,33 +1962,7 @@ namespace EasySales
             DpprMySQLconfig mysql_config = mysql_list[0];
             string compName = mysql_config.config_database;
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                if(compName == "easysale_uvjoy")
-                {
-                    logger.message = "Collection sync is set to run now";
-                    logger.Broadcast();
-                    new JobUJ().Execute();
-                }
-                else
-                {
-                    logger.message = "[SQL Accounting] branch sync is set to run now";
-                    logger.Broadcast();
-                    new JobBranchSync().Execute();
-                }
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "QNE stock sync is set to run now";
-                logger.message = "This button is not enabled for [QNE] branch sync at the moment.";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "This button is not enabled for [APS] branch sync at the moment. Branch sync will run at set interval";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] branch sync is set to run now";
                 logger.Broadcast();
@@ -2223,41 +1987,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] stock category sync is set to run now";
-                logger.Broadcast();
-                new JobProductCategorySync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "This button is not enabled for QNE stock category sync at the moment. Stock category sync will run at set interval";
-                logger.message = "[QNE] stock category sync is set to run now";
-                logger.Broadcast();
-                new JobStockCategoriesSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] stock category sync is set to run now";
-                logger.Broadcast();
-                new JobAPSStockCategorySync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] stock category sync is set to run now";
                 logger.Broadcast();
                 new JobATCStockCategorySync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] stock category sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2267,41 +2001,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] stock UOM price sync is set to run now";
-                logger.Broadcast();
-                new JobProductPriceSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "This button is not enabled for QNE stock UOM price sync at the moment. Stock UOM price sync will run at set interval";
-                logger.message = "[QNE] stock UOM price sync is set to run now";
-                logger.Broadcast();
-                new JobStockUomPriceSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] stock UOM price sync is set to run now";
-                logger.Broadcast();
-                new JobAPSStockUomPriceSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] stock UOM price sync is set to run now";
                 logger.Broadcast();
                 new JobATCStockUomPriceSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] stock UOM price sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2311,40 +2015,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] special price sync is set to run now";
-                logger.Broadcast();
-                new JobProductSpecialPriceSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "QNE stock sync is set to run now";
-                logger.message = "This button is not enabled for QNE";// stock special price sync at the moment. Stock special price sync will run at set interval";
-                logger.Broadcast();
-            }
-            else if(accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] stock special price sync is set to run now";
-                logger.Broadcast();
-                new JobAPSStockSpecialPriceSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] stock special price sync is set to run now";
                 logger.Broadcast();
                 new JobATCStockSpecialPriceSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] stock special price sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2354,23 +2029,9 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] stock group sync is set to run now";
-                logger.Broadcast();
-                new JobProductGroupsSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "QNE stock sync is set to run now";
-                logger.message = "This button is not enabled for QNE"; //stock group sync at the moment. Stock group sync will run at set interval";
-                logger.Broadcast();
-            }
-            else
-            {
-                logger.message = "This button is not enabled for this accounting software at the moment. Please contact EasySales Team.";
-                logger.Broadcast();
-            }
+
+            logger.message = "This button is not enabled for this accounting software at the moment. Please contact EasySales Team.";
+            logger.Broadcast();
         }
 
         private void btn_run_costpricesync_Click(object sender, EventArgs e)
@@ -2379,23 +2040,8 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] cost price sync is set to run now";
-                logger.Broadcast();
-                new JobCostPriceSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "QNE stock sync is set to run now";
-                logger.message = "This button is not enabled for QNE";// cost price sync at the moment. Cost price sync will run at set interval";
-                logger.Broadcast();
-            }
-            else 
-            {
-                logger.message = "This button is not enabled for this accounting software at the moment.";
-                logger.Broadcast();
-            }
+            logger.message = "This button is not enabled for this accounting software at the moment.";
+            logger.Broadcast();
         }
 
         private void btn_run_ageingkosync_Click(object sender, EventArgs e)
@@ -2404,42 +2050,12 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] ageing KO sync is set to run now";
-                logger.Broadcast();
-                new JobKnockOffSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "QNE stock sync is set to run now";
-                logger.message = "This button is not enabled for QNE";// ageing KO sync at the moment. Ageing KO sync will run at set interval";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "APS Aging KO CN & Receipt is set to run now";
-                logger.Broadcast();
-                new JobAPSCreditNoteKOSync().Execute();
-                new JobAPSReceiptKOSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AutoCount] ageing KO sync is set to run now";
                 logger.Broadcast();
                 new JobATCINVKOSync().Execute();                
                 new JobATCCNKOSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] ageing KO sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2449,25 +2065,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] warehouse sync is set to run now";
-                logger.Broadcast();
-                new JobWhStockSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";//warehouse quantity sync at the moment. Warehouse quantity sync will run at set interval";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] warehouse quantity sync is set to run now";
-                logger.Broadcast();
-                //new JobAPSWarehouseSync().Execute();
-                new JobAPSWarehouseQtySync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] warehouse quantity sync is set to run now";
                 logger.Broadcast();
@@ -2484,17 +2082,6 @@ namespace EasySales
                 //}
                 
             }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] warehouse quantity sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
-            }
         }
 
         private void btn_run_rcptsync_Click(object sender, EventArgs e)
@@ -2503,41 +2090,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] receipt sync is set to run now";
-                logger.Broadcast();
-                new JobRcptSyncSQLAcc().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "This button is not enabled for QNE receipt sync at the moment. Receipt sync will run at set interval";
-                logger.message = "[QNE] receipt sync is set to run now";
-                logger.Broadcast();
-                new JobReceiptSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] receipt sync is set to run now";
-                logger.Broadcast();
-                new JobAPSReceiptSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] receipt sync is set to run now";
                 logger.Broadcast();
                 new JobATCReceiptSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] receipt sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2547,40 +2104,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] credit note sync is set to run now";
-                logger.Broadcast();
-                new JobCNSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "[QNE] credit note sync is set to run now";
-                logger.Broadcast();
-                new JobCreditNoteSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] credit note sync is set to run now";
-                logger.Broadcast();
-                new JobAPSCreditNoteSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+           if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] credit note sync is set to run now";
                 logger.Broadcast();
                 new JobATCCreditNoteSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] credit note sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2590,40 +2118,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] credit note details sync is set to run now";
-                logger.Broadcast();
-                new JobCNDtlSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";  //credit note details sync at the moment. Credit note details sync will run at set interval";
-                //logger.message = "[QNE] credit note details sync is set to run now";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] credit note details sync is set to run now";
-                logger.Broadcast();
-                new JobAPSCreditNoteDetailSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] credit note details sync is set to run now";
                 logger.Broadcast();
                 new JobATCCreditNoteDetailSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] credit note details sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2633,26 +2132,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] debit note sync is set to run now";
-                logger.Broadcast();
-                new JobDNSync().Execute();
-                new JobDNDtlSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "[QNE] debit note sync is set to run now";
-                logger.Broadcast();
-                new JobDebitNoteSync().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] debit note sync is set to run now";
-                logger.Broadcast();
-                new JobAPSDebitNoteSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[APS] debit note sync is set to run now";
                 logger.Broadcast();
@@ -2677,37 +2157,10 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] outstanding SO sync is set to run now";
-                logger.Broadcast();
-                new JobOutstandingSOSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";// outstanding SO sync at the moment. Outstanding SO sync will run at set interval";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "This button is not enabled for [APS] outstanding SO sync at the moment.";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 new JobATCOutstandingSO().Execute();
                 logger.message = "[ATC] outstanding SO sync is set to run now";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] outstanding SO sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
                 logger.Broadcast();
             }
         }
@@ -2718,24 +2171,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] Transfer Sales Invoices sync is set to run now";
-                logger.Broadcast();
-                new JobINVTransfer().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "[QNE] Transfer Sales Invoices sync is set to run now";
-                logger.Broadcast();
-                new JobPostSalesInvoice().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "This button is not enabled for [AutoCount]";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 if (cb_sdk_atc.Checked)
                 {
@@ -2752,17 +2188,6 @@ namespace EasySales
                 
                 
             }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] Transfer Sales Invoices sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
-            }
         }
 
         private void btn_run_transfersalescns_Click(object sender, EventArgs e)
@@ -2771,25 +2196,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQLAccounting] Transfer Sales CNs sync is set to run now";
-                logger.Broadcast();
-                new JobCNTransfer().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "[QNE] Transfer Sales CNs sync is set to run now";
-                logger.Broadcast();
-                new JobPostSalesCNs().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] Transfer Sales CNs sync is set to run now";
-                logger.Broadcast();
-                new JobAPSTransferCN().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 if(cb_sdk_atc.Checked)
                 {
@@ -2817,38 +2224,9 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] image sync is set to run now";
-                logger.Broadcast();
-                new JobReadImageSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "[QNE] image sync is set to run now";
-                logger.Broadcast();
-                new TranferImgGM().Execute();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] image sync is set to run now";
-                logger.Broadcast();
-                new JobAPSImageSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AutoCount] This button is not enabled for this job";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] invoice sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
                 logger.Broadcast();
             }
         }
@@ -2859,39 +2237,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] item template sync is set to run now";
-                logger.Broadcast();
-                new JobItemTemplateSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                //logger.message = "QNE stock sync is set to run now";
-                logger.message = "This button is not enabled for QNE";// item template sync at the moment. Item template sync will run at set interval";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "This button is not enabled for [APS] item template sync at the moment.";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] item template sync is set to run now";
                 logger.Broadcast();
                 new JobATCItemTemplateSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] item template sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2901,38 +2251,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQL Accounting] item template details sync is set to run now";
-                logger.Broadcast();
-                new JobItemTemplateDtlSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";// item template details sync at the moment. Item template details sync will run at set interval";
-                logger.Broadcast();
-            } 
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "This button is not enabled for [APS] item template details sync at the moment.";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AUTOCOUNT] item template details sync is set to run now";
                 logger.Broadcast();
                 new JobATCItemTemplateDtlSync().Execute();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] item template details sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
             }
         }
 
@@ -2942,23 +2265,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQLAccounting] Stock Transfer will run now";
-                logger.Broadcast();
-                new JobStockTransfer().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "This button is not enabled for [APS] update cash sales sync at the moment.";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AutoCount] Transfer Stock will run now";
                 logger.Broadcast();
@@ -2972,18 +2279,6 @@ namespace EasySales
                     logger.Broadcast("Current AutoCount didn't have SDK license. If yes, kindly tick the SDK checkbox.");
                 }
             }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] update cash sales sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
-            }
-
 
         }
 
@@ -2993,25 +2288,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "[SQLAccounting] delivery order sync is set to run now";
-                logger.Broadcast();
-                new JobDOSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] delivery order sync is set to run now";
-                logger.Broadcast();
-                new JobAPSDOSync().Execute();
-                new JobAPSDODetailSync().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AutoCount] This button is not enabled for this job";
                 logger.Broadcast();
@@ -3035,37 +2312,9 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "This button is not enabled for [SQLAccounting]"; 
-                logger.Broadcast();
-                new JobUJ().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] transfer PO basket is set to run now";
-                logger.Broadcast();
-                new JobAPSTransferPOBasket().Execute();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AutoCount] This button is not enabled for this job";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "[SAGE UBS] transfer PO basket sync is set to run now";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
                 logger.Broadcast();
             }
         }
@@ -3085,12 +2334,6 @@ namespace EasySales
             {
                 logger.message = "This button is not enabled for QNE";
                 logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "[APS] transfer quotation is set to run now";
-                logger.Broadcast();
-                new JobAPSTransferQuotation().Execute();
             }
             else if (accSoftware.software_name == "AutoCount")
             {
@@ -3116,13 +2359,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "Customer Refund and Customer Contra Local is set to run now";
-                logger.Broadcast();
-                new JobCFSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
+            if (accSoftware.software_name == "QNE")
             {
                 logger.message = "This button is not enabled for QNE";
                 logger.Broadcast();
@@ -3156,39 +2393,11 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "Sales order sync is set to run now";
-                logger.Broadcast();
-                new JobSOSync().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "APS")
-            {
-                logger.message = "This button is not enabled for [APS]";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "This button is not enabled for [AutoCount]";
                 logger.Broadcast();
             }
-            else if (accSoftware.software_name == "Sage UBS")
-            {
-                logger.message = "This button is not enabled for [Sage UBS]";
-                logger.Broadcast();
-                //new JobATCInvoiceSync().Execute(); //later change to ubs job
-            }
-            else
-            {
-                logger.message = "This job is disable from this play button. Kindly contact EasySales team.";
-                logger.Broadcast();
-            }
-
         }
 
         private void button_check_data_Click(object sender, EventArgs e)
@@ -3203,18 +2412,7 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "Transfer Cash Sales is set to run now";
-                logger.Broadcast();
-                new JobCSTransfer().Execute();
-            }
-            else if (accSoftware.software_name == "QNE")
-            {
-                logger.message = "This button is not enabled for QNE";
-                logger.Broadcast();
-            }
-            else if (accSoftware.software_name == "AutoCount")
+            if (accSoftware.software_name == "AutoCount")
             {
                 logger.message = "[AutoCount] Transfer Cash Sales will run now";
                 logger.Broadcast();
@@ -3232,17 +2430,9 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "Sales Credit Note is set to run now";
-                logger.Broadcast();
-                new JobCNSalesSync().Execute();
-            }
-            else
-            {
+            
                 logger.message = "This button is not enabled for this accounting software. Kindly contact EasySales Team";
                 logger.Broadcast();
-            }
         }
 
         private void btn_run_salesdn_Click(object sender, EventArgs e)
@@ -3251,17 +2441,8 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "Sales Debit Note is set to run now";
-                logger.Broadcast();
-                new JobDNSalesSync().Execute();
-            }
-            else
-            {
                 logger.message = "This button is not enabled for this accounting software. Kindly contact EasySales Team";
                 logger.Broadcast();
-            }
         }
 
         private void btn_run_salesinv_Click(object sender, EventArgs e)
@@ -3270,17 +2451,8 @@ namespace EasySales
             List<DpprAccountingSoftware> getAccSoftware = LocalDB.GetAccountingSoftwares();
             DpprAccountingSoftware accSoftware = getAccSoftware[0];
 
-            if (accSoftware.software_name == "SQLAccounting")
-            {
-                logger.message = "Sales Invoice & Cash Sales are set to run now";
-                logger.Broadcast();
-                new JobInvoiceSalesSync().Execute();
-            }
-            else
-            {
-                logger.message = "This button is not enabled for this accounting software. Kindly contact EasySales Team";
-                logger.Broadcast();
-            }
+            logger.message = "This button is not enabled for this accounting software. Kindly contact EasySales Team";
+            logger.Broadcast();
         }
 
         private void button_test_atc_integration_Click(object sender, EventArgs e) //test atc connection

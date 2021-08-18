@@ -150,22 +150,21 @@ namespace EasySales.Job
                             throw new Exception("ATC Warehouse Stock sync requires backend rules");
                         }
 
-                        //SELECT whbw.dtModifyDate, whhq.dtModifyDate, stk.intInvID, charlocation1, stk.charItemCode as [ItemCode], su.varStockUnitNm as [UOM], isnull(whhq.decQtyOnHand, 0) as [Qty1], isnull(whkl.decQtyOnHand, 0) as [Qty2], isnull(whbw.decQtyOnHand, 0) as [Qty3], isnull(whjb.decQtyOnHand, 0) as [Qty4], isnull(whpi.decQtyOnHand, 0) as [Qty5], isnull(whkj.decQtyOnHand, 0) as [Qty6], po.decQtyOnOrder as [POQty] from inv_stocktbl stk inner join inv_stockunittbl su on stk.intStockUnitID = su.intStockUnitID and stk.charItemCode != '' and stk.charItemCode not like '%deleted%' left outer join vwActiveInv_WarehouseStockTbl whhq on stk.intinvid = whhq.intinvid and whhq.intWarehouseID = 1 left outer join vwActiveInv_WarehouseStockTbl whkl on stk.intinvid = whkl.intinvid and whkl.intWarehouseID = 2 left outer join vwActiveInv_WarehouseStockTbl whbw on stk.intinvid = whbw.intinvid and whbw.intWarehouseID = 3 left outer join vwActiveInv_WarehouseStockTbl whjb on stk.intinvid = whjb.intinvid and whjb.intWarehouseID = 4 left outer join vwActiveInv_WarehouseStockTbl whpi on stk.intinvid = whpi.intinvid and whpi.intWarehouseID = 5 left outer join vwActiveInv_WarehouseStockTbl whkj on stk.intinvid = whkj.intinvid and whkj.intWarehouseID = 10003 left outer join Pur_POOffSetTbl po on stk.intinvid = po.intinvid WHERE stk.blnIsDelete = 'false' and whhq.dtModifyDate >= '2020-09-01' or whkl.dtModifyDate >= '2020-09-01' or whbw.dtModifyDate >= '2020-09-01' or whjb.dtModifyDate >= '2020-09-01' or whpi.dtModifyDate >= '2020-09-01' or whkj.dtModifyDate >= '2020-09-01'
-                        //SELECT product_code, product_uom FROM cms_product_uom_price_v2 WHERE product_default_price = 1 AND active_status = 1
-                        ArrayList baseUom = mysql.Select("SELECT product_code, product_uom FROM cms_product_uom_price_v2 WHERE product_default_price = 1 AND active_status = 1");
+                        //ArrayList baseUom = mysql.Select("SELECT product_code, product_uom FROM cms_product_uom_price_v2 WHERE active_status = 1");
+                        ////product_default_price = 1 AND
 
-                        Dictionary<string, string> uniqueKeyList = new Dictionary<string, string>();
-                        for (int i = 0; i < baseUom.Count; i++)
-                        {
-                            Dictionary<string, string> each = (Dictionary<string, string>)baseUom[i];
-                            string product_code = each["product_code"].ToString();
-                            string product_uom = each["product_uom"].ToString();
-                            if(!uniqueKeyList.ContainsKey(product_code))
-                            {
-                                uniqueKeyList.Add(product_code, product_uom);
-                            }
-                        }
-                        baseUom.Clear();
+                        //Dictionary<string, string> uniqueKeyList = new Dictionary<string, string>();
+                        //for (int i = 0; i < baseUom.Count; i++)
+                        //{
+                        //    Dictionary<string, string> each = (Dictionary<string, string>)baseUom[i];
+                        //    string product_code = each["product_code"].ToString();
+                        //    string product_uom = each["product_uom"].ToString();
+                        //    if(!uniqueKeyList.ContainsKey(product_code))
+                        //    {
+                        //        uniqueKeyList.Add(product_code, product_uom);
+                        //    }
+                        //}
+                        //baseUom.Clear();
 
                         ArrayList itemFromDb = mysql.Select("SELECT product_code FROM cms_product WHERE product_status = 1");
                         ArrayList itemList = new ArrayList();
@@ -365,21 +364,21 @@ namespace EasySales.Job
                                             {
                                                 UOMFROMMSSQL = mssql_fields.Value;
 
-                                                if (uniqueKeyList.ContainsKey(productCode))
-                                                {
-                                                    var value = uniqueKeyList.Where(pair => pair.Key == productCode)
-                                                                .Select(pair => pair.Value)
-                                                                .FirstOrDefault();
-                                                    uomName = value;
-                                                    Console.WriteLine(value);
-                                                }
+                                                //if (uniqueKeyList.ContainsKey(productCode))
+                                                //{
+                                                //    var value = uniqueKeyList.Where(pair => pair.Key == productCode)
+                                                //                .Select(pair => pair.Value)
+                                                //                .FirstOrDefault();
+                                                //    uomName = value;
+                                                //    Console.WriteLine(value);
+                                                //}
 
-                                                if (UOMFROMMSSQL == uomName)
-                                                {
+                                                //if (UOMFROMMSSQL == uomName)
+                                                //{
                                                     finalUOM = UOMFROMMSSQL;
                                                     Database.Sanitize(ref UOMFROMMSSQL);
                                                     row += inIdx == 0 ? "('" + UOMFROMMSSQL + "" : "','" + UOMFROMMSSQL;
-                                                }
+                                                //}
                                             }
                                         });
 
@@ -480,7 +479,7 @@ namespace EasySales.Job
                                 valueString.Clear();
                             }
 
-                            uniqueKeyList.Clear();
+                            //uniqueKeyList.Clear();
                             itemList.Clear();
                             warehouseItemList.Clear();
 

@@ -64,6 +64,7 @@ namespace EasySales.Job
                         //Dictionary<string, string> cms_updated_time = mysql.GetUpdatedTime("cms_creditnote");
 
                         ArrayList mssql_rule = new ArrayList();
+                        ArrayList udfFieldList = new ArrayList();
 
                         if (jsonRule != null)
                         {
@@ -71,7 +72,8 @@ namespace EasySales.Job
                             {
                                 if (key.mssql != null && key.mssql.GetType().ToString() == "Newtonsoft.Json.Linq.JArray")
                                 {
-                                    string query = "SELECT DocNo, DebtorCode, DocDate, NetTotal, Cancelled, KnockOffAmt, RefundAmt FROM dbo.ARCN ORDER BY docdate";
+                                    //string query = "SELECT DocNo, DebtorCode, DocDate, NetTotal, Cancelled, KnockOffAmt, RefundAmt FROM dbo.ARCN ORDER BY docdate";
+                                    string query = "SELECT AR.DocNo, AR.DebtorCode, AR.DocDate, AR.NetTotal, AR.Cancelled, AR.KnockOffAmt, AR.RefundAmt, CN.RefDocNo FROM dbo.ARCN AS AR LEFT JOIN dbo.CN AS CN ON AR.DocNo = CN.DocNo ORDER BY AR.docdate DESC";
 
                                     var mssql_rules = key.mssql;
                                     foreach (var db in mssql_rules)
@@ -102,6 +104,22 @@ namespace EasySales.Job
                                                     { "mysql", item.ToString() }
                                                 };
                                                 exclude.Add(pair);
+                                            }
+                                        }
+
+                                        //udfFieldList
+                                        if (db.udf != null)
+                                        {
+                                            dynamic _udf = db.udf;
+                                            if (_udf != null)
+                                            {
+                                                if (_udf.Count > 0)
+                                                {
+                                                    foreach (var item in _udf)
+                                                    {
+                                                        udfFieldList.Add(item);
+                                                    }
+                                                }
                                             }
                                         }
 
@@ -147,7 +165,7 @@ namespace EasySales.Job
 
                             ArrayList queryResult = mssql.Select(database.Query);
 
-                            if(queryResult.Count > 0)
+                            if (queryResult.Count > 0)
                             {
                                 logger.Broadcast("CN to be inserted: " + queryResult.Count);
                                 mysql.Insert("UPDATE cms_creditnote SET cancelled = 'T'"); //deactivate all first
@@ -188,6 +206,12 @@ namespace EasySales.Job
                                 }
                             });
 
+                            if (udfFieldList.Count > 0)
+                            {
+                                columns += ", cn_udf";
+                                update_columns += ", cn_udf=VALUES(cn_udf)";
+                            }
+
                             insertQuery = insertQuery.ReplaceAll(columns, "@columns");
                             insertQuery = insertQuery.ReplaceAll(update_columns, "@update_columns");
 
@@ -203,6 +227,10 @@ namespace EasySales.Job
                             {
                                 string row = string.Empty;
                                 string custCode = string.Empty;
+
+                                string CN_UDF = string.Empty;
+
+                                Dictionary<string, string> valueList = new Dictionary<string, string>();
 
                                 database.Include.Iterate<Dictionary<string, string>>((include, inIdx) =>
                                 {
@@ -277,7 +305,7 @@ namespace EasySales.Job
                                             {
                                                 _NetTotal = mssql_fields.Value;
                                             }
-                                            
+
                                             if (mssql_fields.Key == "RefundAmt")
                                             {
                                                 _RefundAmt = mssql_fields.Value;
@@ -299,7 +327,7 @@ namespace EasySales.Job
 
                                     map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
                                     {
-                                        
+
 
                                         if (find_mssql_field.EcodeContains(mssql_fields.Key))
                                         {
@@ -346,7 +374,65 @@ namespace EasySales.Job
                                             addedToRow = true;
                                         }
                                     }
+
+                                    if (udfFieldList.Count > 0)
+                                    {
+                                        map.Iterate<KeyValuePair<string, string>>((mssql_fields, mssqIndx) =>
+                                        {
+                                            for (int ixx = 0; ixx < udfFieldList.Count; ixx++)
+                                            {
+                                                string fieldName = udfFieldList[ixx].ToString();
+
+                                                Console.WriteLine("mssql_fields.Key ==> " + mssql_fields.Key);
+                                                if (mssql_fields.Key == fieldName)
+                                                {
+                                                    string value = mssql_fields.Value;
+                                                    Console.WriteLine("fieldName ==> " + fieldName);
+                                                    string keyFieldName = fieldName; //"\"" + fieldName + "\"";
+                                                    if (!valueList.ContainsKey(keyFieldName))
+                                                    {
+                                                        valueList.Add(keyFieldName, value);
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }
                                 });
+
+                                if (udfFieldList.Count > 0)
+                                {
+                                    CN_UDF += "{";
+                                    for (int ixx = 0; ixx < udfFieldList.Count; ixx++)
+                                    {
+                                        string item = udfFieldList[ixx].ToString();
+                                        string lowercase = item.ToLower();
+
+                                        for (int ix = 0; ix < valueList.Count; ix++)
+                                        {
+                                            string key = valueList.ElementAt(ix).Key.ToLower();
+                                            string value = valueList.ElementAt(ix).Value;
+                                            if (value != null)
+                                            {
+                                                value = value.Replace(Environment.NewLine, "@n");
+                                                value = value.Replace("\n", "@n");
+                                            }
+
+                                            if (lowercase == key)
+                                            {
+                                                Database.Sanitize(ref value);
+                                                CN_UDF += ixx == 0 ? "\"" + lowercase + "\": \"" + value + "\"" : ",\"" + lowercase + "\": \"" + value + "\"";
+                                                //row += inIdx == 0 ? "('" + doCode + "" : "','" + doCode;
+                                                Console.WriteLine("CN_UDF ==>" + CN_UDF);
+                                            }
+                                        }
+                                    }
+                                    CN_UDF += "}";
+                                }
+
+                                if (udfFieldList.Count > 0)
+                                {
+                                    row += "','" + CN_UDF;
+                                }
 
                                 row += "')";
                                 //Console.WriteLine(row);

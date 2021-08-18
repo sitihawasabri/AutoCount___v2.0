@@ -155,6 +155,93 @@ namespace EasySales
             }
         }
 
+        public dynamic NewDO()
+        {
+            GlobalLogger logger = new GlobalLogger();
+
+            logger.Broadcast("isV2: " + isV2);
+
+            if (isV2)
+            {
+                try
+                {
+                    logger.Broadcast("this.isV2 = " + this.isV2);
+                    logger.Broadcast("this.connection.userSession: " + this.connection.userSession);
+                    logger.Broadcast("this.connection.userSession.DBSetting: " + this.connection.userSession.DBSetting);
+
+                    AutoCountV2.Message("this.isV2 = " + this.isV2 + "this.connection.userSession: " + this.connection.userSession + "this.connection.userSession.DBSetting: " + this.connection.userSession.DBSetting);
+
+                    AutoCount.Invoicing.Sales.DeliveryOrder.DeliveryOrderCommand cmd = AutoCount.Invoicing.Sales.DeliveryOrder.DeliveryOrderCommand.Create(this.connection.userSession, this.connection.userSession.DBSetting);
+                    AutoCount.Invoicing.Sales.DeliveryOrder.DeliveryOrder doc = cmd.AddNew();
+
+                    logger.Broadcast("doc = " + doc);
+
+                    return doc;
+                }
+                catch (Exception ex)
+                {
+                    logger.Broadcast("-----> catch: " + ex.Message);
+                    return null;
+                }
+
+            }
+            else
+            {
+                try
+                {
+                    logger.Broadcast("this.isV2 = " + this.isV2);
+                    logger.Broadcast("this.connection.dBSetting: " + this.connection.dBSetting);
+
+                    AutoCount.Invoicing.Sales.DeliveryOrder.DeliveryOrderCommand cmd = AutoCount.Invoicing.Sales.DeliveryOrder.DeliveryOrderCommand.Create(this.connection.userSession, this.connection.userSession.DBSetting);
+                    AutoCount.Invoicing.Sales.DeliveryOrder.DeliveryOrder doc = cmd.AddNew();
+
+                    logger.Broadcast("Doc = " + doc);
+                    return doc;
+                }
+                catch (Exception ex)
+                {
+                    logger.Broadcast("-----> catch: " + ex.Message);
+                    return null;
+                }
+            }
+        }
+
+        public dynamic NewDODetails(dynamic doc)
+        {
+            GlobalLogger logger = new GlobalLogger();
+            logger.Broadcast("----- creating doc details");
+            if (isV2)
+            {
+                try
+                {
+                    AutoCount.Invoicing.Sales.DeliveryOrder.DeliveryOrderDetail dtl;
+                    dtl = doc.AddDetail();
+                    logger.Broadcast("added dtl");
+                    return dtl;
+                }
+                catch (Exception ex)
+                {
+                    logger.Broadcast("-----> dtl catch: " + ex.Message);
+                    return null;
+                }
+            }
+            else
+            {
+                try
+                {
+                    AutoCount.Invoicing.Sales.DeliveryOrder.DeliveryOrderDetail dtl;
+                    dtl = doc.AddDetail();
+                    logger.Broadcast("bce added dtl");
+                    return dtl;
+                }
+                catch (Exception ex)
+                {
+                    logger.Broadcast("-----> dtl catch: " + ex.Message);
+                    return null;
+                }
+            }
+        }
+
         public dynamic NewCreditNote()
         {
             GlobalLogger logger = new GlobalLogger();

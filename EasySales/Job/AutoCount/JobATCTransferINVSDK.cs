@@ -25,13 +25,13 @@ namespace EasySales.Job
     public class JobATCTransferINVSDK : IJob
     {
         private ATC_Connection connection = null;
-        private string socket_OrderId = string.Empty;
-
-        public void ExecuteSocket(string socket_OrderId)
+        public string invIdToTransfer = string.Empty;
+        public void TransferINV(string invId)
         {
-            this.socket_OrderId = socket_OrderId;
+            this.invIdToTransfer = invId;
             Execute();
         }
+
 
         private string FormatAsRTF(string rtfString)
         {
@@ -90,6 +90,8 @@ namespace EasySales.Job
                         string targetDBname = string.Empty;
                         string order_status = "2";
                         string order_id_format = "<<New>>";
+                        int enable_credit_control = 0;
+                        string acc_no = "500-00000";
 
                         CheckBackendRule checkDB = new CheckBackendRule(mysql: mysql);
                         dynamic jsonRule = checkDB.CheckTablesExist().GetSettingByTableName("transfer_inv_atc");
@@ -107,16 +109,29 @@ namespace EasySales.Job
                                         targetDBname = db.name != null ? db.name : targetDBname;
                                         order_status = db.order_status != null ? db.order_status : order_status;
                                         order_id_format = db.order_id_format != null ? db.order_id_format : order_id_format;
+
+                                        if (db.enable_credit_control != null)
+                                        {
+                                            enable_credit_control = db.enable_credit_control;
+                                        }
+
+                                        if (db.acc_no != null)
+                                        {
+                                            acc_no = db.acc_no;
+                                        }
                                     }
                                 }
                             }
 
+                            logger.Broadcast("Acc No: " + acc_no);
+
                             string SOQuery = "SELECT o.*,DATE_FORMAT(o.order_date,'%d/%m/%Y %H:%s:%i') AS order_date_format,l.staff_code,cms_customer_branch.branch_name FROM cms_order AS o LEFT JOIN cms_customer AS c ON o.cust_id = c.cust_id LEFT JOIN cms_login AS l ON o.salesperson_id = l.login_id LEFT JOIN cms_customer_branch ON cms_customer_branch.branch_code = o.branch_code WHERE o.order_status = " + order_status + " AND cancel_status = 0 AND doc_type = 'invoice' AND order_fault = 0 ";
+                            string whereDOToTransferQuery = " AND order_id IN (" + invIdToTransfer + ")";
+                            SOQuery += invIdToTransfer != string.Empty ? whereDOToTransferQuery : string.Empty;
 
-                            socket_OrderId = socket_OrderId.Replace("\"", "\'");
-                            string socketQuery = "AND order_id IN (" + socket_OrderId + ")";
-
-                            SOQuery = SOQuery + (socket_OrderId != string.Empty ? socketQuery : "");
+                            //socket_OrderId = socket_OrderId.Replace("\"", "\'");
+                            //string socketQuery = "AND order_id IN (" + socket_OrderId + ")";
+                            //SOQuery = SOQuery + (socket_OrderId != string.Empty ? socketQuery : "");
 
                             ArrayList queryResult = mysql.Select(SOQuery);
                             mysql.Message(SOQuery);
@@ -164,6 +179,14 @@ namespace EasySales.Job
                                         logger.Broadcast("Dynamic ATC");
 
                                         dynamic doc = autoCount.NewInvoice();
+                                        if (enable_credit_control == 0)
+                                        {
+                                            doc.DisableCreditControl();
+                                        }
+                                        else
+                                        {
+                                            doc.EnableCreditControl();
+                                        }
 
                                         doc.DebtorCode = cms_data["cust_code"];
                                         logger.Broadcast("Cust Code: " + cms_data["cust_code"]);
@@ -229,10 +252,13 @@ namespace EasySales.Job
 
                                                 logger.Broadcast("Inserting the items");
                                                 dynamic dtl = autoCount.NewInvoiceDetails(doc);
-                                                dtl.AccNo = "500-00000"; 
+                                                dtl.AccNo = acc_no;
                                                 string itemCode = item["product_code"];
                                                 dtl.ItemCode = itemCode;
-                                                onlyItemToSync.Add(item["product_code"]);
+                                                if(!onlyItemToSync.Contains(itemCode))
+                                                {
+                                                    onlyItemToSync.Add(item["product_code"]);
+                                                }
 
                                                 logger.Broadcast("Product code: " + item["product_code"]);
                                                 logger.Broadcast("Passing product code");
@@ -252,6 +278,14 @@ namespace EasySales.Job
                                                 double cloud_qty = 0;
                                                 double.TryParse(item["product_uom_rate"], out cloud_qty);
                                                 cloud_qty = cloud_qty * (double)quantity;
+
+                                                string DOID = string.Empty;
+
+                                                if (invIdToTransfer != string.Empty)
+                                                {
+                                                    dtl.FromDocType = "DO";
+                                                    dtl.FromDocNo = DOID;
+                                                }
 
                                                 if (parentProdCodeList.Contains(itemCode))
                                                 {
@@ -366,10 +400,10 @@ namespace EasySales.Job
                 });
 
                 thread.Start();
-                if (socket_OrderId != string.Empty)
-                {
-                    thread.Join();
-                }
+                //if (socket_OrderId != string.Empty)
+                //{
+                //    thread.Join();
+                //}
             }
             catch (ThreadAbortException e)
             {

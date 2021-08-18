@@ -148,16 +148,7 @@ namespace EasySales
                     {
                         new JobATCTransferSO().ExecuteSocket(orderId);
                     }
-                }
-                else if (accSoftware.software_name == "SQLAccounting")
-                {
-                    new JobSoTransfer().ExecuteSocket(orderId);
-                }
-                else
-                {
-                    //don't do anything
-                }
-                            
+                }        
             });
         }
 
@@ -173,47 +164,3 @@ namespace EasySales
         }
     }
 }
-
-
-
-//socket.On("invoice", response =>
-//{
-//    string orderId = response.GetValue<string>();
-
-//    Console.WriteLine("invoice: response");
-//    Console.WriteLine(orderId);
-
-//    if (accSoftware.software_name == "AutoCount")
-//    {
-//    }
-//    else if (accSoftware.software_name == "SQLAccounting")
-//    {
-//        new JobINVTransfer().Execute();//.ExecuteSocket(orderId);
-//    }
-//    else
-//    {
-//        //don't do anything
-//    }
-
-//});
-
-//socket.On("cash", response =>
-//{
-//    string orderId = response.GetValue<string>();
-
-//    Console.WriteLine("cash: response");
-//    Console.WriteLine(orderId);
-
-//    if (accSoftware.software_name == "AutoCount")
-//    {
-//    }
-//    else if (accSoftware.software_name == "SQLAccounting")
-//    {
-//        new JobCSTransfer().Execute();//.ExecuteSocket(orderId);
-//    }
-//    else
-//    {
-//        //don't do anything
-//    }
-
-//});
